@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+
+  "name": "AI Chat Extractor",
+
+  "version": "1.0",
+
+  "description": "Extract ChatGPT conversations",
+
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+
+  "host_permissions": [
+  "https://chatgpt.com/*",
+  "https://claude.ai/*",
+  "https://gemini.google.com/*",
+  "https://www.perplexity.ai/*",
+  "https://grok.com/*"
+]
+  ,
+
+ "content_scripts": [
+  {
+    "matches": [
+      "https://chatgpt.com/*",
+      "https://claude.ai/*",
+      "https://gemini.google.com/*",
+      "https://www.perplexity.ai/*",
+      "https://grok.com/*"
+    ],
+
+    "js": [
+  "content.js",
+  "memory.js",
+  "injector.js"
+]   
+  }
+],
+
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
