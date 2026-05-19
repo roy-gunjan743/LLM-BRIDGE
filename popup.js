@@ -1,39 +1,46 @@
-document.getElementById(
-    "chatgptBtn"
-).addEventListener("click", () => {
+console.log("popup loaded");
 
-    chrome.tabs.create({
-        url: "https://chatgpt.com"
+const importBtn = document.getElementById("importBtn");
+const summaryBox = document.getElementById("summaryBox");
+
+importBtn.addEventListener("click", async () => {
+
+    console.log("Starting import...");
+
+    const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true
     });
 
-});
+    console.log("Active tab found");
 
-document.getElementById(
-    "claudeBtn"
-).addEventListener("click", () => {
+    chrome.tabs.sendMessage(
+        tab.id,
+        { action: "extractChat" },
 
-    chrome.tabs.create({
-        url: "https://claude.ai"
-    });
+        (response) => {
 
-});
+            console.log("Response received:", response);
 
-document.getElementById(
-    "geminiBtn"
-).addEventListener("click", () => {
+            if (chrome.runtime.lastError) {
 
-    chrome.tabs.create({
-        url: "https://gemini.google.com"
-    });
+                console.error(chrome.runtime.lastError);
 
-});
+                summaryBox.value =
+                    "ERROR: " + chrome.runtime.lastError.message;
 
-document.getElementById(
-    "perplexityBtn"
-).addEventListener("click", () => {
+                return;
+            }
 
-    chrome.tabs.create({
-        url: "https://www.perplexity.ai"
-    });
+            if (!response) {
 
+                summaryBox.value =
+                    "No response from content.js";
+
+                return;
+            }
+
+            summaryBox.value = response.data;
+        }
+    );
 });

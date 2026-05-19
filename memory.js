@@ -1,92 +1,106 @@
-console.log("Memory Engine Started");
+console.log("Llama Memory Engine Started");
 
 /*
-Create smart project memory
+Generate memory using Ollama
 */
 
-function generateProjectMemory(chats) {
+async function generateMemory(chats) {
 
-    let summary = {
-
-        projectName:
-            "AI Transfer Extension",
-
-        completedFeatures: [],
-
-        currentIssues: [],
-
-        importantMessages: []
-
-    };
+    let conversation = "";
 
     chats.forEach((chat) => {
 
-        const text =
-            chat.content.toLowerCase();
-
-        /*
-        Detect completed work
-        */
-
-        if (
-            text.includes("done") ||
-            text.includes("worked")
-        ) {
-
-            summary.completedFeatures.push(
-                chat.content
-            );
-        }
-
-        /*
-        Detect problems
-        */
-
-        if (
-            text.includes("error") ||
-            text.includes("failed") ||
-            text.includes("not working")
-        ) {
-
-            summary.currentIssues.push(
-                chat.content
-            );
-        }
-
-        /*
-        Save important long messages
-        */
-
-        if (
-            chat.content.length > 100
-        ) {
-
-            summary.importantMessages.push(
-                chat.content
-            );
-        }
+        conversation +=
+            chat.role +
+            ": " +
+            chat.content +
+            "\n\n";
 
     });
 
-    return summary;
+    /*
+    AI prompt
+    */
+
+    const prompt = `
+You are an AI memory engine.
+
+Summarize this developer conversation.
+
+Format clearly.
+
+Include:
+- Project Name
+- Completed Features
+- Current Issues
+- Important Context
+- Next Steps
+
+Conversation:
+
+${conversation}
+`;
+
+    /*
+    Call Ollama
+    */
+
+    const response =
+        await fetch(
+
+            "http://127.0.0.1:11434/api/generate",
+
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    model: "llama3.2",
+
+                    prompt: prompt,
+
+                    stream: false
+
+                })
+
+            }
+
+        );
+
+    const data =
+        await response.json();
+
+    /*
+    Return ONLY text
+    */
+
+    return data.response;
 }
 
 /*
-Load chats
+Main logic
 */
 
-setTimeout(() => {
+setTimeout(async () => {
 
     chrome.storage.local.get(
+
         ["universalChats"],
-        (result) => {
+
+        async (result) => {
 
             if (
                 !result.universalChats
             ) {
 
                 console.log(
-                    "No universal chats found"
+                    "No chats found"
                 );
 
                 return;
@@ -96,36 +110,68 @@ setTimeout(() => {
                 result.universalChats.chats;
 
             /*
-            Generate memory
+            Empty chats
             */
 
-            const memory =
-                generateProjectMemory(
-                    chats
-                );
-
-            console.log(
-                "Generated Memory:",
-                memory
-            );
-
-            /*
-            Save memory
-            */
-
-            chrome.storage.local.set({
-
-                projectMemory:
-                    memory
-
-            }, () => {
+            if (
+                !chats ||
+                chats.length === 0
+            ) {
 
                 console.log(
-                    "Project Memory Saved"
+                    "No chats extracted"
                 );
 
-            });
+                return;
+            }
 
-        });
+            console.log(
+                "Generating AI memory..."
+            );
 
-}, 6000);
+            try {
+
+                const memory =
+                    await generateMemory(
+                        chats
+                    );
+
+                console.log(
+                    "AI Memory Generated:"
+                );
+
+                console.log(memory);
+
+                /*
+                Save as STRING
+                */
+
+                chrome.storage.local.set({
+
+                    projectMemory:
+                        String(memory)
+
+                }, () => {
+
+                    console.log(
+                        "AI Memory Saved"
+                    );
+
+                });
+
+            }
+
+            catch(error) {
+
+                console.error(
+                    "Memory Error:",
+                    error
+                );
+
+            }
+
+        }
+
+    );
+
+}, 10000);
