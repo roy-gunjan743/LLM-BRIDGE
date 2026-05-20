@@ -1,177 +1,116 @@
-console.log("Llama Memory Engine Started");
+console.log("Memory Engine Loaded");
 
-/*
-Generate memory using Ollama
-*/
+async function getStoredChats() {
+
+    return new Promise((resolve) => {
+
+        chrome.storage.local.get(
+            ["extractedChats"],
+            (result) => {
+
+                resolve(
+                    result.extractedChats || []
+                );
+            }
+        );
+    });
+}
+
+async function saveMemory(memory) {
+
+    return new Promise((resolve) => {
+
+        chrome.storage.local.set(
+            {
+                projectMemory: memory
+            },
+            () => resolve(true)
+        );
+    });
+}
 
 async function generateMemory(chats) {
 
-    let conversation = "";
-
-    chats.forEach((chat) => {
-
-        conversation +=
-            chat.role +
-            ": " +
-            chat.content +
-            "\n\n";
-
-    });
-
-    /*
-    AI prompt
-    */
+    const conversation =
+        chats.map(chat =>
+            `${chat.role}: ${chat.content}`
+        ).join("\n\n");
 
     const prompt = `
-You are an AI memory engine.
+You are a Long-Term AI Memory System.
 
-Summarize this developer conversation.
+Convert this conversation into:
 
-Format clearly.
-
-Include:
-- Project Name
-- Completed Features
-- Current Issues
-- Important Context
-- Next Steps
+- Persistent memory
+- Project context
+- Goals
+- Current bugs
+- Technical stack
+- Next actions
 
 Conversation:
 
 ${conversation}
 `;
 
-    /*
-    Call Ollama
-    */
-
     const response =
         await fetch(
-
             "http://127.0.0.1:11434/api/generate",
-
             {
-
                 method: "POST",
-
                 headers: {
                     "Content-Type":
                         "application/json"
                 },
-
                 body: JSON.stringify({
-
                     model: "llama3.2",
-
-                    prompt: prompt,
-
+                    prompt,
                     stream: false
-
                 })
-
             }
-
         );
 
     const data =
         await response.json();
 
-    /*
-    Return ONLY text
-    */
-
     return data.response;
 }
 
-/*
-Main logic
-*/
+async function startMemoryEngine() {
 
-setTimeout(async () => {
+    try {
 
-    chrome.storage.local.get(
+        const chats =
+            await getStoredChats();
 
-        ["universalChats"],
-
-        async (result) => {
-
-            if (
-                !result.universalChats
-            ) {
-
-                console.log(
-                    "No chats found"
-                );
-
-                return;
-            }
-
-            const chats =
-                result.universalChats.chats;
-
-            /*
-            Empty chats
-            */
-
-            if (
-                !chats ||
-                chats.length === 0
-            ) {
-
-                console.log(
-                    "No chats extracted"
-                );
-
-                return;
-            }
+        if (!chats.length) {
 
             console.log(
-                "Generating AI memory..."
+                "No chats available"
             );
 
-            try {
-
-                const memory =
-                    await generateMemory(
-                        chats
-                    );
-
-                console.log(
-                    "AI Memory Generated:"
-                );
-
-                console.log(memory);
-
-                /*
-                Save as STRING
-                */
-
-                chrome.storage.local.set({
-
-                    projectMemory:
-                        String(memory)
-
-                }, () => {
-
-                    console.log(
-                        "AI Memory Saved"
-                    );
-
-                });
-
-            }
-
-            catch(error) {
-
-                console.error(
-                    "Memory Error:",
-                    error
-                );
-
-            }
-
+            return;
         }
 
-    );
+        console.log(
+            "Generating memory..."
+        );
 
-}, 10000);
+        const memory =
+            await generateMemory(chats);
+
+        await saveMemory(memory);
+
+        console.log(
+            "Memory saved successfully"
+        );
+
+        console.log(memory);
+
+    } catch (error) {
+
+        console.error(error);
+    }
+}
+
+startMemoryEngine();

@@ -1,16 +1,31 @@
 {
   "manifest_version": 3,
-  "name": "AI Importer",
-  "version": "1.0",
+
+  "name": "LLM BRIDGE",
+
+  "version": "2.0",
+
+  "description": "Universal AI Memory Bridge",
 
   "permissions": [
     "activeTab",
-    "scripting"
+    "storage",
+    "scripting",
+    "tabs"
   ],
 
   "host_permissions": [
-    "<all_urls>"
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://www.perplexity.ai/*",
+    "http://127.0.0.1:11434/*"
   ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
 
   "action": {
     "default_popup": "popup.html"
@@ -18,8 +33,19 @@
 
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://www.perplexity.ai/*"
+      ],
+
+      "js": [
+        "content.js"
+      ],
+
+      "run_at": "document_idle"
     }
   ]
 }
