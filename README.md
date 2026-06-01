@@ -1,261 +1,208 @@
-# 🌉 LLM Bridge
+# LLM Bridge
 
-> **Transfer, summarize, and compress AI conversations between different LLMs.**
+LLM Bridge is a Chrome Manifest V3 extension that extracts supported AI chat pages, summarizes long conversations through a local Ollama model, and stores reusable memory in `chrome.storage.local`.
 
-LLM Bridge is a Chrome extension that extracts entire ChatGPT conversations, summarizes them using local AI models with Ollama, and prepares them to be sent into another AI system.
+Processing is local. The popup is only the control surface; extraction, chunking, Ollama calls, summary persistence, memory generation, and progress tracking run in the background service worker.
 
-![License](https://img.shields.io/badge/license-MIT-purple) ![Platform](https://img.shields.io/badge/platform-Chrome-blue) ![Model](https://img.shields.io/badge/model-Llama%203.2-green) ![Local](https://img.shields.io/badge/processing-100%25%20local-orange)
+## Features
 
----
+- Declarative MV3 content script injection only
+- Resilient ChatGPT extraction with fallback selectors and hidden-element filtering
+- Local summarization through Ollama
+- Connection test, request timeout, and retry handling
+- Smart paragraph and sentence-aware chunking
+- Persistent extracted chats, summaries, memory, settings, and progress
+- Popup state restore after refresh or close
+- Copy, TXT export, and Markdown export
+- Options page for Ollama URL, model, chunk size, temperature, and system prompt
 
-## 🧠 What Is LLM Bridge?
+## Architecture
 
-Large conversations are difficult to move between AI systems because of token limits. LLM Bridge solves this by compressing your full conversation into a transferable memory block using a local LLM — no cloud, no API keys, no data leaks.
-
-```
-Long Chat
-   ↓
-Extract Messages
-   ↓
-Chunk Conversation
-   ↓
-AI Summarization (Llama 3.2 via Ollama)
-   ↓
-Compressed Context
-   ↓
-Send To Another AI
-```
-
-This allows one AI conversation to continue inside another AI model without losing important context.
-
----
-
-## ✨ Features
-
-- ✅ Extract full ChatGPT conversations
-- ✅ Summarize huge chats automatically
-- ✅ Compress context for another AI
-- ✅ Local AI processing with Ollama
-- ✅ Supports long conversations (unlimited length)
-- ✅ Chunk-based summarization (4000 chars/chunk)
-- ✅ One-click copy / export
-- ✅ Fast and lightweight
-
----
-
-## 🔥 Example Use Cases
-
-### AI Migration
-Move a ChatGPT conversation into Claude, Gemini, DeepSeek, Grok, or any local LLM — without losing context.
-
-### Context Compression
-Compress 100k+ token conversations into compact, meaningful summaries that fit any model's context window.
-
-### AI Memory System
-Store summarized conversations for long-term AI memory across sessions and platforms.
-
----
-
-## ⚙️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Extension | Chrome Extension API (Manifest V3) |
-| Frontend | JavaScript, HTML, CSS |
-| AI Backend | Ollama + Llama 3.2 |
-| Inference | `http://127.0.0.1:11434/api/generate` |
-
----
-
-## 📂 Project Structure
-
-```
-LLM-Bridge/
-│
-├── manifest.json       # Extension config & permissions
-├── popup.html          # Extension popup UI
-├── popup.js            # Chunking & summarization logic
-├── content.js          # Conversation extraction from DOM
-├── background.js       # Service worker / Ollama bridge
-├── style.css           # Popup styles
-└── icons/              # Extension icons
+```text
+Supported chat tab
+  |
+  | manifest content script
+  v
+content.js
+  | extractChat
+  v
+background.js
+  | storage, chunking, Ollama, memory, progress
+  v
+chrome.storage.local
+  ^
+  | getState / summarizeChats / extractChat
+  |
+popup.js
 ```
 
----
+### File Map
 
-## 🚀 Installation
+| File | Purpose |
+| --- | --- |
+| `manifest.json` | MV3 config, permissions, content script registration, options page |
+| `content.js` | DOM extraction from supported chat pages |
+| `background.js` | Processing pipeline, Ollama client, storage, progress state |
+| `memory.js` | Persistent memory generation and retrieval API |
+| `popup.html` / `popup.js` | UI-only popup |
+| `options.html` / `options.js` | User-configurable Ollama and summarization settings |
 
-### Step 1 — Install Ollama
+## Installation
 
-Download from the [Ollama Official Website](https://ollama.com) and install it on your machine.
-
-### Step 2 — Pull Llama 3.2
+1. Install Chrome or another Chromium browser that supports Manifest V3 extensions.
+2. Install Ollama from <https://ollama.com>.
+3. Pull a model:
 
 ```bash
 ollama pull llama3.2
 ```
 
-### Step 3 — Start Ollama
+4. Start Ollama with extension origins enabled.
 
-```bash
-ollama serve
-```
+PowerShell:
 
-Expected output:
-
-```
-Listening on 127.0.0.1:11434
-```
-
-### Step 4 — Fix Cross-Origin Permissions
-
-To allow the Chrome extension to communicate with your local Ollama server, set this environment variable before starting Ollama:
-
-```bash
-# macOS / Linux
-OLLAMA_ORIGINS=chrome-extension://* ollama serve
-
-# Windows (PowerShell)
+```powershell
 $env:OLLAMA_ORIGINS="chrome-extension://*"; ollama serve
 ```
 
-### Step 5 — Clone the Repository
+macOS or Linux:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/LLM-Bridge.git
+OLLAMA_ORIGINS=chrome-extension://* ollama serve
 ```
 
-Or download the ZIP directly from GitHub.
+5. Open `chrome://extensions/`.
+6. Enable Developer Mode.
+7. Click Load unpacked.
+8. Select this repository folder.
+9. Open the extension options page and confirm your Ollama URL and model.
 
-### Step 6 — Load the Extension in Chrome
+Default settings:
 
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable **Developer Mode** (top-right toggle)
-3. Click **Load unpacked**
-4. Select the `LLM-Bridge` project folder
-
-The LLM Bridge icon will appear in your Chrome toolbar.
-
----
-
-## ▶️ Usage
-
-1. Open any ChatGPT conversation in Chrome
-2. Click the **LLM Bridge** extension icon
-3. Press **Import Conversation**
-4. The extension will:
-   - Extract the entire conversation from the page
-   - Split it into 4000-character chunks
-   - Send each chunk to Ollama for summarization
-   - Combine all chunk summaries into one final memory block
-5. Copy the compressed context and paste it into Claude, Gemini, or any other AI
-
----
-
-## 🧩 How It Works
-
-### 1. Conversation Extraction
-`content.js` injects into the active tab and collects all visible conversation messages from the DOM.
-
-### 2. Smart Chunking
-Large conversations are split into manageable pieces:
-
-```js
-// popup.js
-const CHUNK_SIZE = 4000; // characters per chunk
-const chunks = chunkText(fullConversation, CHUNK_SIZE);
-```
-
-### 3. AI Summarization
-Each chunk is sent to the local Ollama API:
-
-```
-POST http://127.0.0.1:11434/api/generate
+```text
+Ollama URL: http://127.0.0.1:11434
 Model: llama3.2
+Chunk size: 4000
+Temperature: 0.2
 ```
 
-### 4. Final Compression
-All chunk summaries are merged into one transferable AI memory block — ready to be injected into any new AI conversation.
+## Usage
 
----
+1. Open a supported chat page, such as `https://chatgpt.com/`.
+2. Refresh the chat tab after installing or reloading the extension so the declarative content script is present.
+3. Open LLM Bridge.
+4. Click Import.
+5. Click Summarize.
+6. Keep using the browser while processing continues in the background.
+7. Reopen the popup to see persisted progress and the latest summary.
+8. Copy the summary or export it as TXT or Markdown.
 
-## ❗ Troubleshooting
+## Supported Pages
 
-**Error: `Empty response from Ollama`**
+- `https://chatgpt.com/*`
+- `https://chat.openai.com/*`
+- `https://claude.ai/*`
+- `https://gemini.google.com/*`
+- `https://www.perplexity.ai/*`
 
-Make sure Ollama is running:
+Extraction is most complete on ChatGPT. Other hosts are registered for future compatibility and may need selector tuning.
+
+## Storage
+
+LLM Bridge stores data in `chrome.storage.local`:
+
+| Key | Contents |
+| --- | --- |
+| `extractedChats` | Last extracted role/content message array |
+| `latestSummary` | Latest final summary |
+| `savedSummaries` | Recent summary history |
+| `projectMemory` | Generated persistent memory |
+| `progressState` | Current or last processing state |
+| `settings` | Options page configuration |
+
+## Error Messages
+
+The extension surfaces explicit errors instead of failing silently:
+
+- `Ollama Offline`
+- `Chat Extraction Failed`
+- `No Chats Found`
+- `Storage Error`
+- `Timeout Error`
+- `Summary Failure`
+
+## Troubleshooting
+
+### Ollama Offline
+
+Run:
+
 ```bash
 ollama serve
 ```
 
----
+Then open the extension options page and click Test Ollama.
 
-**Error: `403 Forbidden`**
+### 403 or CORS error from Ollama
 
-Check that `host_permissions` in `manifest.json` includes:
-```json
-"host_permissions": ["http://127.0.0.1:11434/*"]
+Restart Ollama with:
+
+```powershell
+$env:OLLAMA_ORIGINS="chrome-extension://*"; ollama serve
 ```
 
-Also ensure the `OLLAMA_ORIGINS` environment variable is set (see Step 4 above).
+### Receiving end does not exist
 
----
+The extension uses only declarative content script injection. If you installed or reloaded the extension while the chat tab was already open, refresh the chat tab once and try Import again.
 
-**Extension not working / no output**
+### No Chats Found
 
-- Reload the extension at `chrome://extensions/`
-- Refresh the ChatGPT tab
-- Try again
+Make sure the conversation is visible in the page, not hidden behind a modal, login wall, or unloaded virtualized region. Scroll through very long chats before importing if the site lazily renders older turns.
 
----
+### Timeout Error
 
-## 🔐 Permissions
+Use a smaller chunk size or a faster model in the options page. Large chats and slower CPU-only models can exceed the request timeout.
 
-```json
-"permissions": [
-  "tabs",
-  "activeTab",
-  "scripting",
-  "storage"
-],
-"host_permissions": [
-  "http://127.0.0.1:11434/*"
-]
+### Summary Failure
+
+Check that the configured model exists:
+
+```bash
+ollama list
 ```
 
----
+Pull it if needed:
 
-## 🛣️ Roadmap
+```bash
+ollama pull llama3.2
+```
 
-- [ ] Multi-AI export (Claude, Gemini, DeepSeek, Grok)
-- [ ] PDF export
-- [ ] Markdown export
-- [ ] Cloud sync
-- [ ] AI memory database
-- [ ] Auto conversation detection
-- [ ] Streaming summaries
-- [ ] Multi-model summarization pipeline
+## Security Notes
 
----
+- The extension does not use remote AI APIs.
+- Extracted text is cleaned before storage and rendering.
+- Popup output is written through textarea text values, not `innerHTML`.
+- Message payloads and stored data are validated in the background service worker.
+- Host permissions are limited to supported chat sites plus local Ollama hosts.
 
-## 👨‍💻 Developer
+## Development
 
-**Gunjan Roy**
+Syntax check JavaScript files:
 
----
+```bash
+node --check background.js
+node --check content.js
+node --check memory.js
+node --check popup.js
+node --check options.js
+```
 
-## 📜 License
+After editing extension files:
 
-This project is licensed under the [MIT License](LICENSE).
+1. Open `chrome://extensions/`.
+2. Click Reload on LLM Bridge.
+3. Refresh any already-open supported chat tabs.
 
----
+## Notes On Large Chats
 
-## ⭐ Support
-
-If LLM Bridge helps you, please consider:
-
-- ⭐ **Star** the repository
-- 🍴 **Fork** it and build on top
-- 🐛 **Open issues** for bugs or feature requests
-
-Every star helps others discover the project. Thank you!
+LLM Bridge is designed for long conversations by chunking progressively and persisting progress. Browser pages may still virtualize older messages, so the extractor can only read messages currently present in the DOM.

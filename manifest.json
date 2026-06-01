@@ -1,36 +1,27 @@
 {
   "manifest_version": 3,
-
   "name": "LLM BRIDGE",
-
-  "version": "2.0",
-
+  "version": "2.1",
   "description": "Universal AI Memory Bridge",
-
   "permissions": [
-    "activeTab",
-    "storage",
-    "scripting",
-    "tabs"
+    "storage"
   ],
-
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
     "https://claude.ai/*",
     "https://gemini.google.com/*",
     "https://www.perplexity.ai/*",
-    "http://127.0.0.1:11434/*"
+    "http://127.0.0.1/*",
+    "http://localhost/*"
   ],
-
   "background": {
     "service_worker": "background.js"
   },
-
   "action": {
     "default_popup": "popup.html"
   },
-
+  "options_page": "options.html",
   "content_scripts": [
     {
       "matches": [
@@ -40,11 +31,9 @@
         "https://gemini.google.com/*",
         "https://www.perplexity.ai/*"
       ],
-
       "js": [
         "content.js"
       ],
-
       "run_at": "document_idle"
     }
   ]

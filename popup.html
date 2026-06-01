@@ -5,18 +5,14 @@
   <title>LLM Bridge</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      width: 400px;
-      min-height: 520px;
-      background: #1a1a1a;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      color: #e8e8e8;
-      padding: 0;
+      width: 420px;
+      min-height: 560px;
+      background: #181818;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #eeeeee;
       overflow: hidden;
     }
-
-    /* ── HEADER ── */
     .header {
       display: flex;
       align-items: center;
@@ -25,318 +21,176 @@
       border-bottom: 1px solid #2d2d2d;
       background: #222222;
     }
-    .header-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: #eaf3de;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #d9edbf;
+      display: grid;
+      place-items: center;
+      color: #315f0e;
+      font-weight: 800;
     }
-    .header-icon svg { width: 20px; height: 20px; }
-    .header-text h1 {
-      font-size: 15px;
-      font-weight: 600;
-      color: #f0f0f0;
-      line-height: 1.2;
-    }
-    .header-text p {
-      font-size: 11px;
-      color: #888;
-      margin-top: 1px;
-    }
+    h1 { font-size: 15px; line-height: 1.2; }
+    .subtitle { font-size: 11px; color: #8f8f8f; margin-top: 2px; }
     .ollama-status {
       margin-left: auto;
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 11.5px;
-      color: #999;
+      color: #9a9a9a;
+      font-size: 11px;
+      white-space: nowrap;
     }
     .status-dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: #5a9e1f;
-      box-shadow: 0 0 5px rgba(90,158,31,0.6);
-      flex-shrink: 0;
+      background: #68ad2b;
+      box-shadow: 0 0 6px rgba(104, 173, 43, 0.5);
     }
-    .status-dot.error { background: #e05252; box-shadow: 0 0 5px rgba(224,82,82,0.6); }
-
-    /* ── BODY ── */
+    .status-dot.error { background: #df5757; box-shadow: 0 0 6px rgba(223, 87, 87, 0.5); }
     .body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
-
-    /* ── BUTTONS ── */
     .btn-row { display: flex; gap: 8px; }
     .btn {
-      flex: 1;
-      display: flex;
+      min-height: 38px;
+      border: 1px solid #3b3b3b;
+      border-radius: 8px;
+      background: #282828;
+      color: #e4e4e4;
+      cursor: pointer;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 7px;
-      padding: 11px 14px;
-      border-radius: 10px;
-      font-size: 13.5px;
-      font-weight: 500;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.18s ease;
-      letter-spacing: 0.01em;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 12px;
+      transition: background 0.16s, border-color 0.16s, opacity 0.16s;
     }
-    .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
-    .btn-import {
-      background: #2b2b2b;
-      border-color: #3d3d3d;
-      color: #e0e0e0;
-    }
-    .btn-import:hover:not(:disabled) {
-      background: #333;
-      border-color: #555;
-    }
-    .btn-summarize {
-      background: #3b6d11;
-      border-color: #4a8516;
-      color: #d8f0b8;
-    }
-    .btn-summarize:hover:not(:disabled) {
-      background: #437a13;
-    }
-    .btn:disabled {
-      opacity: 0.38;
-      cursor: not-allowed;
-    }
-    .btn-import.loading { opacity: 0.5; cursor: not-allowed; }
-
-    /* ── STATS ROW ── */
-    .stats-row {
-      display: none;
-      gap: 6px;
-    }
+    .btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+    .btn.primary { background: #3f7417; border-color: #549423; color: #e1f5c8; }
+    .btn.icon { width: 38px; padding: 0; flex: 0 0 auto; }
+    .btn.flex { flex: 1; }
+    .btn:hover:not(:disabled) { background: #333333; border-color: #595959; }
+    .btn.primary:hover:not(:disabled) { background: #4b861d; }
+    .btn:disabled { opacity: 0.42; cursor: not-allowed; }
+    .btn.loading { opacity: 0.62; }
+    .stats-row { display: none; gap: 6px; }
     .stat-pill {
       flex: 1;
-      background: #242424;
-      border: 1px solid #2f2f2f;
+      border: 1px solid #303030;
+      background: #232323;
       border-radius: 8px;
-      padding: 7px 10px;
+      padding: 7px 8px;
       text-align: center;
     }
-    .stat-pill .val {
-      font-size: 15px;
-      font-weight: 600;
-      color: #c8e8a0;
-      line-height: 1;
-    }
-    .stat-pill .lbl {
-      font-size: 10px;
-      color: #666;
-      margin-top: 3px;
-    }
-
-    /* ── PROGRESS ── */
+    .stat-pill .val { font-size: 15px; font-weight: 700; color: #cdeaaa; line-height: 1; }
+    .stat-pill .lbl { font-size: 10px; color: #777777; margin-top: 4px; }
     .progress-wrap { display: none; }
-    .progress-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
+    .progress-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .progress-label { color: #9b9b9b; font-size: 11.5px; max-width: 310px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .progress-pct { color: #cdeaaa; font-size: 11.5px; font-weight: 700; }
+    .progress-track { width: 100%; height: 5px; background: #2d2d2d; border-radius: 999px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #579326, #a4d96c); transition: width 0.25s; }
+    .chunk-dots { display: flex; flex-wrap: wrap; gap: 4px; min-height: 10px; margin-top: 8px; }
+    .chunk-dot { width: 6px; height: 6px; border-radius: 50%; background: #416b20; opacity: 0.35; }
+    .chunk-dot.done { opacity: 1; background: #9ad25b; }
+    .chunk-dot.active { opacity: 1; background: #ffffff; }
+    .banner {
+      display: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.4;
     }
-    .progress-label {
-      font-size: 11.5px;
-      color: #888;
-    }
-    .progress-pct {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: #c8e8a0;
-    }
-    .progress-track {
-      width: 100%;
-      height: 4px;
-      background: #2d2d2d;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #4a8516, #8dc63f);
-      border-radius: 999px;
-      transition: width 0.35s ease;
-    }
-    .chunk-dots {
-      display: flex;
-      gap: 4px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-      min-height: 12px;
-    }
-    .chunk-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #3b6d11;
-      opacity: 0.25;
-      transition: opacity 0.3s, background 0.3s;
-    }
-    .chunk-dot.done { opacity: 1; background: #8dc63f; }
-    .chunk-dot.active { opacity: 1; background: #5a9e1f; animation: pulse 0.8s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-
-    /* ── SUMMARY BOX ── */
+    .banner.error { background: rgba(223, 87, 87, 0.12); border: 1px solid rgba(223, 87, 87, 0.35); color: #ff9b9b; }
+    .banner.success { background: rgba(104, 173, 43, 0.12); border: 1px solid rgba(104, 173, 43, 0.35); color: #cdeaaa; }
     .summary-wrap { position: relative; }
     #summaryBox {
       width: 100%;
-      height: 230px;
+      height: 238px;
       resize: none;
-      background: #222;
-      border: 1px solid #2f2f2f;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 13px;
-      line-height: 1.65;
-      color: #ddd;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.2s;
-      display: block;
-    }
-    #summaryBox::placeholder { color: #444; }
-    #summaryBox:focus { border-color: #3d5a20; }
-
-    /* ── COPY BUTTON ── */
-    .copy-btn {
-      display: none;
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 11px;
-      border-radius: 7px;
-      background: #1a1a1a;
-      border: 1px solid #3d3d3d;
-      font-size: 12px;
-      font-weight: 500;
-      color: #aaa;
-      cursor: pointer;
-      transition: all 0.18s;
-    }
-    .copy-btn svg { width: 12px; height: 12px; }
-    .copy-btn:hover { border-color: #5a9e1f; color: #c8e8a0; }
-    .copy-btn.copied { border-color: #5a9e1f; color: #8dc63f; }
-
-    /* ── ERROR BAR ── */
-    .error-bar {
-      display: none;
-      background: rgba(224,82,82,0.1);
-      border: 1px solid rgba(224,82,82,0.3);
+      background: #222222;
+      border: 1px solid #303030;
       border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 12px;
-      color: #f08080;
-      line-height: 1.5;
+      padding: 12px;
+      color: #dddddd;
+      font: 13px/1.55 inherit;
+      outline: none;
     }
-
-    /* ── FOOTER ── */
+    #summaryBox::placeholder { color: #666666; }
+    .export-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
     .footer {
       padding: 9px 16px;
       border-top: 1px solid #2d2d2d;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      color: #666666;
+      font-size: 11px;
     }
-    .footer-left { font-size: 11px; color: #555; }
-    .footer-right { font-size: 11px; color: #444; }
   </style>
 </head>
 <body>
-
-  <!-- HEADER -->
   <div class="header">
-    <div class="header-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
-      </svg>
-    </div>
-    <div class="header-text">
+    <div class="mark">LB</div>
+    <div>
       <h1>LLM Bridge</h1>
-      <p>Local AI · Llama 3.2</p>
+      <div class="subtitle">Local summaries with persisted memory</div>
     </div>
     <div class="ollama-status">
-      <div class="status-dot" id="ollamaDot"></div>
-      <span id="ollamaLabel">Ollama running</span>
+      <span class="status-dot" id="ollamaDot"></span>
+      <span id="ollamaLabel">Checking...</span>
     </div>
   </div>
 
-  <!-- BODY -->
   <div class="body">
-
-    <!-- BUTTONS -->
     <div class="btn-row">
-      <button class="btn btn-import" id="importBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Import chat
+      <button class="btn flex" id="importBtn" type="button" title="Import visible chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+        Import
       </button>
-      <button class="btn btn-summarize" id="summarizeBtn" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a8 8 0 0 1 8 8c0 5-8 12-8 12S4 15 4 10a8 8 0 0 1 8-8z"/><circle cx="12" cy="10" r="2"/>
-        </svg>
+      <button class="btn primary flex" id="summarizeBtn" type="button" disabled title="Summarize imported chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/></svg>
         Summarize
       </button>
+      <button class="btn icon" id="optionsBtn" type="button" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9c.3.6.9 1 1.6 1h.1a2 2 0 1 1 0 4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
+      </button>
     </div>
 
-    <!-- STATS -->
     <div class="stats-row" id="statsRow">
-      <div class="stat-pill">
-        <div class="val" id="statMsgs">—</div>
-        <div class="lbl">messages</div>
-      </div>
-      <div class="stat-pill">
-        <div class="val" id="statChunks">—</div>
-        <div class="lbl">chunks</div>
-      </div>
-      <div class="stat-pill">
-        <div class="val" id="statChars">—</div>
-        <div class="lbl">characters</div>
-      </div>
+      <div class="stat-pill"><div class="val" id="statMsgs">-</div><div class="lbl">messages</div></div>
+      <div class="stat-pill"><div class="val" id="statChunks">-</div><div class="lbl">chunks</div></div>
+      <div class="stat-pill"><div class="val" id="statChars">-</div><div class="lbl">characters</div></div>
     </div>
 
-    <!-- PROGRESS -->
     <div class="progress-wrap" id="progressWrap">
       <div class="progress-meta">
-        <span class="progress-label" id="progressLabel">Starting...</span>
+        <span class="progress-label" id="progressLabel">Ready</span>
         <span class="progress-pct" id="progressPct">0%</span>
       </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
       <div class="chunk-dots" id="chunkDots"></div>
     </div>
 
-    <!-- ERROR -->
-    <div class="error-bar" id="errorBar"></div>
+    <div class="banner error" id="errorBar"></div>
+    <div class="banner success" id="successBar"></div>
 
-    <!-- SUMMARY -->
     <div class="summary-wrap">
-      <textarea id="summaryBox" placeholder="Summary will appear here..." readonly></textarea>
-      <button class="copy-btn" id="copyBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-        </svg>
-        Copy
-      </button>
+      <textarea id="summaryBox" placeholder="Summary preview will appear here..." readonly></textarea>
     </div>
 
+    <div class="export-row">
+      <button class="btn" id="copyBtn" type="button" disabled>Copy</button>
+      <button class="btn" id="downloadTxtBtn" type="button" disabled>TXT</button>
+      <button class="btn" id="downloadMdBtn" type="button" disabled>Markdown</button>
+    </div>
   </div>
 
-  <!-- FOOTER -->
   <div class="footer">
-    <span class="footer-left" id="footerStatus">Ready</span>
-    <span class="footer-right">v2.0</span>
+    <span id="footerStatus">Ready</span>
+    <span id="modelLabel">v2.1</span>
   </div>
 
   <script src="popup.js"></script>

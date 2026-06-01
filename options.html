@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LLM Bridge Settings</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #181818;
+      color: #eeeeee;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+    h1 { font-size: 24px; margin: 0 0 4px; }
+    p { color: #9a9a9a; margin: 0 0 22px; }
+    form {
+      display: grid;
+      gap: 16px;
+      border: 1px solid #303030;
+      background: #222222;
+      border-radius: 8px;
+      padding: 18px;
+    }
+    label {
+      display: grid;
+      gap: 7px;
+      color: #d8d8d8;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    input, textarea {
+      width: 100%;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      background: #181818;
+      color: #eeeeee;
+      padding: 10px 11px;
+      font: 14px/1.5 inherit;
+      outline: none;
+    }
+    textarea { min-height: 150px; resize: vertical; }
+    input:focus, textarea:focus { border-color: #6da83a; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .actions { display: flex; align-items: center; gap: 10px; }
+    button {
+      border: 1px solid #549423;
+      background: #3f7417;
+      color: #e1f5c8;
+      border-radius: 8px;
+      min-height: 38px;
+      padding: 9px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary { background: #292929; border-color: #3b3b3b; color: #e4e4e4; }
+    .status { min-height: 20px; color: #cdeaaa; font-size: 13px; }
+    .status.error { color: #ff9b9b; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>LLM Bridge Settings</h1>
+    <p>Configure local Ollama summarization and memory generation.</p>
+
+    <form id="settingsForm">
+      <label>
+        Ollama URL
+        <input id="ollamaUrl" type="url" required placeholder="http://127.0.0.1:11434" />
+      </label>
+
+      <div class="grid">
+        <label>
+          Model name
+          <input id="model" type="text" required placeholder="llama3.2" />
+        </label>
+        <label>
+          Chunk size
+          <input id="chunkSize" type="number" min="1200" max="20000" step="100" required />
+        </label>
+      </div>
+
+      <label>
+        Temperature
+        <input id="temperature" type="number" min="0" max="2" step="0.1" required />
+      </label>
+
+      <label>
+        System prompt
+        <textarea id="systemPrompt" required></textarea>
+      </label>
+
+      <div class="actions">
+        <button type="submit">Save Settings</button>
+        <button class="secondary" type="button" id="testBtn">Test Ollama</button>
+        <span class="status" id="status"></span>
+      </div>
+    </form>
+  </main>
+
+  <script src="options.js"></script>
+</body>
+</html>
