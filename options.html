@@ -4,103 +4,305 @@
   <meta charset="UTF-8" />
   <title>LLM Bridge Settings</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      background: #181818;
-      color: #eeeeee;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 0;
     }
-    main {
-      max-width: 760px;
+
+    body {
+      background: #0d0f14;
+      color: #e8eaf0;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .s-root {
+      background: #0d0f14;
+      min-height: 580px;
+      padding: 2.5rem 2rem;
+    }
+
+    .s-page {
+      max-width: 640px;
       margin: 0 auto;
-      padding: 28px 20px 40px;
     }
-    h1 { font-size: 24px; margin: 0 0 4px; }
-    p { color: #9a9a9a; margin: 0 0 22px; }
-    form {
-      display: grid;
-      gap: 16px;
-      border: 1px solid #303030;
-      background: #222222;
-      border-radius: 8px;
-      padding: 18px;
+
+    .s-top {
+      margin-bottom: 2rem;
     }
-    label {
-      display: grid;
-      gap: 7px;
-      color: #d8d8d8;
+
+    .s-top h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    .s-top p {
       font-size: 13px;
-      font-weight: 700;
+      color: #5a607a;
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
     }
-    input, textarea {
+
+    .s-card {
+      background: #13161e;
+      border: 1px solid #1e2230;
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .s-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #3d4460;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .s-section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #1e2230;
+    }
+
+    .s-field {
+      margin-bottom: 1.1rem;
+    }
+
+    .s-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .s-label {
+      font-size: 12px;
+      color: #7b82a0;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .s-input {
       width: 100%;
-      border: 1px solid #3a3a3a;
-      border-radius: 8px;
-      background: #181818;
-      color: #eeeeee;
-      padding: 10px 11px;
-      font: 14px/1.5 inherit;
+      background: #0a0c12;
+      border: 1px solid #1e2230;
+      border-radius: 9px;
+      color: #e8eaf0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      padding: 10px 14px;
       outline: none;
+      transition: border-color .15s, box-shadow .15s;
     }
-    textarea { min-height: 150px; resize: vertical; }
-    input:focus, textarea:focus { border-color: #6da83a; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .actions { display: flex; align-items: center; gap: 10px; }
-    button {
-      border: 1px solid #549423;
-      background: #3f7417;
-      color: #e1f5c8;
-      border-radius: 8px;
-      min-height: 38px;
-      padding: 9px 14px;
-      font-weight: 700;
+
+    .s-input:focus {
+      border-color: #5b6af7;
+      box-shadow: 0 0 0 3px rgba(91, 106, 247, .12);
+    }
+
+    .s-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .s-textarea {
+      width: 100%;
+      background: #0a0c12;
+      border: 1px solid #1e2230;
+      border-radius: 9px;
+      color: #9ba5c2;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      line-height: 1.7;
+      padding: 11px 14px;
+      outline: none;
+      resize: vertical;
+      height: 150px;
+      transition: border-color .15s;
+    }
+
+    .s-textarea:focus {
+      border-color: #5b6af7;
+    }
+
+    .s-temp-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .s-range {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 3px;
+      border-radius: 2px;
+      background: linear-gradient(to right, #5b6af7 20%, #1e2230 20%);
+      outline: none;
+      border: none;
+    }
+
+    .s-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #5b6af7;
       cursor: pointer;
+      border: 3px solid #13161e;
+      box-shadow: 0 0 10px rgba(91, 106, 247, .5);
     }
-    button.secondary { background: #292929; border-color: #3b3b3b; color: #e4e4e4; }
-    .status { min-height: 20px; color: #cdeaaa; font-size: 13px; }
-    .status.error { color: #ff9b9b; }
+
+    .s-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: #5b6af7;
+      min-width: 28px;
+      text-align: right;
+    }
+
+    .s-footer {
+      display: flex;
+      gap: 10px;
+      margin-top: 1.25rem;
+      align-items: center;
+    }
+
+    .s-btn {
+      padding: 11px 0;
+      border-radius: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .15s;
+      letter-spacing: 0.1px;
+    }
+
+    .s-btn-save {
+      background: #5b6af7;
+      color: #fff;
+      flex: 1;
+    }
+
+    .s-btn-save:hover {
+      background: #4a59e8;
+      transform: translateY(-1px);
+    }
+
+    .s-btn-save:active {
+      transform: scale(.98);
+    }
+
+    .s-btn-test {
+      background: transparent;
+      color: #7b82a0;
+      border: 1px solid #1e2230;
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .s-btn-test:hover {
+      color: #e8eaf0;
+      border-color: #2e3447;
+      background: #1a1e2a;
+    }
+
+    .s-badge {
+      background: #1a1d2a;
+      border: 1px solid #252b3e;
+      color: #5b6af7;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 5px;
+    }
+
+    .status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #5b6af7;
+      align-self: center;
+      margin-left: 12px;
+      transition: color 0.15s;
+    }
+
+    .status.error {
+      color: #ff6b6b;
+    }
   </style>
 </head>
 <body>
-  <main>
-    <h1>LLM Bridge Settings</h1>
-    <p>Configure local Ollama summarization and memory generation.</p>
-
-    <form id="settingsForm">
-      <label>
-        Ollama URL
-        <input id="ollamaUrl" type="url" required placeholder="http://127.0.0.1:11434" />
-      </label>
-
-      <div class="grid">
-        <label>
-          Model name
-          <input id="model" type="text" required placeholder="llama3.2" />
-        </label>
-        <label>
-          Chunk size
-          <input id="chunkSize" type="number" min="1200" max="20000" step="100" required />
-        </label>
+  <div class="s-root">
+    <h2 class="sr-only" style="position:absolute;left:-9999px">LLM Bridge — Settings Page</h2>
+    <div class="s-page">
+      <div class="s-top">
+        <h1>LLM Bridge <span style="color:#5b6af7">Settings</span></h1>
+        <p>configure local ollama summarization and memory generation</p>
       </div>
 
-      <label>
-        Temperature
-        <input id="temperature" type="number" min="0" max="2" step="0.1" required />
-      </label>
+      <form id="settingsForm">
+        <div class="s-card">
+          <div class="s-section-label">connection</div>
+          <div class="s-field">
+            <div class="s-label">ollama url</div>
+            <input class="s-input" id="ollamaUrl" type="url" required placeholder="http://127.0.0.1:11434" />
+          </div>
+          <div class="s-row">
+            <div class="s-field">
+              <div class="s-label">model name</div>
+              <input class="s-input" id="model" type="text" required placeholder="llama3.2" />
+            </div>
+            <div class="s-field">
+              <div class="s-label">chunk size</div>
+              <input class="s-input" id="chunkSize" type="number" min="1200" max="20000" step="100" required />
+            </div>
+          </div>
+          <div class="s-field">
+            <div class="s-label">
+              temperature
+              <span class="s-badge" id="sv">0.2</span>
+            </div>
+            <div class="s-temp-wrap">
+              <input class="s-range" type="range" min="0" max="2" step="0.1" value="0.2" id="temperature"
+                oninput="document.getElementById('sv').textContent=this.value;this.style.background='linear-gradient(to right,#5b6af7 '+(this.value*50)+'%,#1e2230 '+(this.value*50)+'%)'" />
+            </div>
+          </div>
+        </div>
 
-      <label>
-        System prompt
-        <textarea id="systemPrompt" required></textarea>
-      </label>
+        <div class="s-card">
+          <div class="s-section-label">system prompt</div>
+          <div class="s-field">
+            <textarea class="s-textarea" id="systemPrompt" required></textarea>
+          </div>
+        </div>
 
-      <div class="actions">
-        <button type="submit">Save Settings</button>
-        <button class="secondary" type="button" id="testBtn">Test Ollama</button>
-        <span class="status" id="status"></span>
-      </div>
-    </form>
-  </main>
+        <div class="s-footer">
+          <button class="s-btn s-btn-save" type="submit">save settings</button>
+          <button class="s-btn-test" type="button" id="testBtn">test ollama</button>
+          <span class="status" id="status"></span>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="options.js"></script>
 </body>

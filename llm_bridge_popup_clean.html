@@ -1,0 +1,383 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0
+  }
+
+  .wrap {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    background: #111
+  }
+
+  .popup {
+    width: 290px;
+    background: #161718;
+    border-radius: 16px;
+    border: 1px solid #2a2b2e;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    color: #e2e4e9
+  }
+
+  .hd {
+    padding: 14px 14px 12px;
+    border-bottom: 1px solid #222326
+  }
+
+  .hd-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 9px
+  }
+
+  .mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #d4ff4e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 11px;
+    color: #111;
+    font-family: 'Inter', sans-serif
+  }
+
+  .name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #f0f0f0
+  }
+
+  .sub {
+    font-size: 10px;
+    color: #555;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 1px
+  }
+
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: #4ade80;
+    font-family: 'JetBrains Mono', monospace
+  }
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: p 2s ease-in-out infinite
+  }
+
+  @keyframes p {
+
+    0%,
+    100% {
+      opacity: 1
+    }
+
+    50% {
+      opacity: .3
+    }
+  }
+
+  .hd-btns {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr 32px;
+    gap: 6px
+  }
+
+  .btn {
+    padding: 7px 0;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #2a2b2e;
+    background: #1e1f21;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all .12s;
+    font-family: 'Inter', sans-serif
+  }
+
+  .btn:hover {
+    color: #ccc;
+    border-color: #3a3b3e
+  }
+
+  .btn.g {
+    background: #d4ff4e;
+    border-color: #d4ff4e;
+    color: #111;
+    font-weight: 600
+  }
+
+  .btn.g:hover {
+    background: #c2ed3c
+  }
+
+  .ibtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #1e1f21;
+    border: 1px solid #2a2b2e;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .12s
+  }
+
+  .ibtn:hover {
+    color: #aaa
+  }
+
+  .body {
+    padding: 12px
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 12px
+  }
+
+  .stat {
+    background: #1a1b1d;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center
+  }
+
+  .sv {
+    font-size: 17px;
+    font-weight: 600;
+    color: #f0f0f0;
+    display: block;
+    font-family: 'JetBrains Mono', monospace
+  }
+
+  .sl {
+    font-size: 9px;
+    color: #444;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+    margin-top: 2px
+  }
+
+  .out {
+    background: #111;
+    border-radius: 10px;
+    padding: 10px 12px;
+    max-height: 148px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.75;
+    margin-bottom: 12px;
+    border: 1px solid #222
+  }
+
+  .out::-webkit-scrollbar {
+    width: 2px
+  }
+
+  .out::-webkit-scrollbar-thumb {
+    background: #2a2b2e;
+    border-radius: 2px
+  }
+
+  .k {
+    color: #a78bfa
+  }
+
+  .s {
+    color: #6ee7b7
+  }
+
+  .b {
+    color: #444
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    margin-bottom: 10px
+  }
+
+  .xbtn {
+    padding: 6px 0;
+    border-radius: 7px;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #222;
+    background: #1a1b1d;
+    color: #555;
+    text-align: center;
+    transition: all .12s;
+    font-family: 'JetBrains Mono', monospace
+  }
+
+  .xbtn:hover {
+    color: #ccc;
+    border-color: #3a3b3e
+  }
+
+  .sbtn {
+    padding: 8px 0;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #222;
+    background: #1a1b1d;
+    color: #555;
+    text-align: center;
+    transition: all .12s;
+    font-family: 'Inter', sans-serif
+  }
+
+  .sbtn:hover {
+    color: #e2e4e9;
+    border-color: #3a3b3e
+  }
+
+  .sbtn.on {
+    border-color: #a78bfa;
+    color: #a78bfa
+  }
+
+  .divider {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #333;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 6px
+  }
+
+  .foot {
+    padding: 8px 12px;
+    border-top: 1px solid #1e1f21;
+    display: flex;
+    justify-content: space-between
+  }
+
+  .ft {
+    font-size: 10px;
+    color: #333;
+    font-family: 'JetBrains Mono', monospace
+  }
+</style>
+
+<div class="wrap">
+  <h2 style="position:absolute;left:-9999px">LLM Bridge popup</h2>
+  <div class="popup">
+
+    <div class="hd">
+      <div class="hd-top">
+        <div class="logo">
+          <div class="mark">LB</div>
+          <div>
+            <div class="name">LLM Bridge</div>
+            <div class="sub">local memory engine</div>
+          </div>
+        </div>
+        <div class="badge">
+          <div class="dot"></div>running
+        </div>
+      </div>
+      <div class="hd-btns">
+        <button class="btn"><i class="ti ti-upload" style="font-size:13px" aria-hidden="true"></i> import</button>
+        <button class="btn g"><i class="ti ti-cpu" style="font-size:13px" aria-hidden="true"></i> summarize</button>
+        <button class="ibtn" aria-label="settings"><i class="ti ti-settings" style="font-size:15px"
+            aria-hidden="true"></i></button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="stats">
+        <div class="stat"><span class="sv">2</span>
+          <div class="sl">messages</div>
+        </div>
+        <div class="stat"><span class="sv">1</span>
+          <div class="sl">chunks</div>
+        </div>
+        <div class="stat"><span class="sv" style="color:#4ade80">6.1k</span>
+          <div class="sl">chars</div>
+        </div>
+      </div>
+
+      <div class="out">
+        <span class="b">{</span><br>
+        &nbsp;<span class="k">"OPEN_ISSUES"</span><span class="b">: [</span><br>
+        &nbsp;&nbsp;<span class="s">"Data Breach Prevention"</span><span class="b">,</span><br>
+        &nbsp;&nbsp;<span class="s">"Strategies to protect sensitive data"</span><br>
+        &nbsp;<span class="b">],</span><br>
+        &nbsp;<span class="k">"NEXT_STEPS"</span><span class="b">: [</span><br>
+        &nbsp;&nbsp;<span class="s">"Conduct Security Audits"</span><span class="b">,</span><br>
+        &nbsp;&nbsp;<span class="s">"Implement Incident Response Plan"</span><br>
+        &nbsp;<span class="b">]</span><br>
+        <span class="b">}</span>
+      </div>
+
+      <div class="divider">export</div>
+      <div class="row" style="margin-bottom:12px">
+        <button class="xbtn" onclick="flash(this,'copied!')">copy</button>
+        <button class="xbtn">TXT</button>
+        <button class="xbtn">markdown</button>
+      </div>
+
+      <div class="divider">send to</div>
+      <div class="row">
+        <button class="sbtn" onclick="pick(this)">ChatGPT</button>
+        <button class="sbtn on" onclick="pick(this)">Claude</button>
+        <button class="sbtn" onclick="pick(this)">Grok</button>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="ft">ready</span>
+      <span class="ft">v2.1 · llama3.2</span>
+    </div>
+
+  </div>
+</div>
+<script>
+  function flash(btn, msg) {
+    const orig = btn.textContent;
+    btn.textContent = msg;
+    btn.style.color = '#d4ff4e';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1200);
+  }
+  function pick(btn) {
+    document.querySelectorAll('.sbtn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+</script>

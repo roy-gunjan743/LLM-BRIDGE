@@ -29,11 +29,13 @@ var MemoryEngine = (() => {
 
         const prompt = [
             "You are the long-term memory engine for LLM Bridge.",
-            "Create persistent memory from the conversation and summary.",
-            "Include project context, goals, bugs, constraints, decisions, technical stack, and next actions.",
+            "Create persistent memory from the conversation and summary as a structured memory block.",
+            "Return only valid minified JSON with these exact keys: MEMORY_ID, FACTS, GOALS, CURRENT_TASK, TECH_STACK, DECISIONS, OPEN_ISSUES, NEXT_STEPS.",
+            "Use arrays of short strings for every key except MEMORY_ID.",
+            "Keep it compact, deterministic, appendable to a memory database, and reusable as future LLM context.",
             "Do not invent facts.",
             "",
-            "Current summary:",
+            "Current structured summary:",
             cleanText(summary),
             "",
             "Conversation excerpt:",

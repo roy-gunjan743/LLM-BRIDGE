@@ -1,19 +1,20 @@
 (() => {
-    if (window.__LLM_BRIDGE_CONTENT_READY__) {
-        return;
-    }
-    window.__LLM_BRIDGE_CONTENT_READY__ = true;
-
     const SELECTORS = [
         "[data-message-author-role]",
         "[data-testid^='conversation-turn-']",
         "article[data-testid*='conversation-turn']",
         "main article",
         "[class*='group/conversation-turn']",
-        "[class*='conversation-turn']"
+        "[class*='conversation-turn']",
+        "[class*='font-claude']",
+        "[class*='font-user']",
+        "[class*='claude-message']",
+        "[class*='user-message']",
+        "[class*='message-bubble']",
+        "[class*='response-content-markdown']"
     ];
 
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    const messageListener = (request, sender, sendResponse) => {
         if (!request || request.action !== "extractChat") {
             return false;
         }
@@ -29,9 +30,25 @@
         }
 
         return true;
-    });
+    };
+
+    if (window.__LLM_BRIDGE_MESSAGE_LISTENER__) {
+        try {
+            chrome.runtime.onMessage.removeListener(window.__LLM_BRIDGE_MESSAGE_LISTENER__);
+        } catch (e) {
+            console.warn("Failed to remove old listener", e);
+        }
+    }
+
+    chrome.runtime.onMessage.addListener(messageListener);
+    window.__LLM_BRIDGE_MESSAGE_LISTENER__ = messageListener;
 
     function extractCurrentChat() {
+        const pageError = getPageError();
+        if (pageError) {
+            throw new Error(pageError);
+        }
+
         const candidates = collectCandidates();
         const seen = new Set();
         const chats = [];
@@ -51,6 +68,17 @@
         }
 
         return chats;
+    }
+
+    function getPageError() {
+        const bodyText = cleanText(document.body?.innerText || "");
+        if (/conversation not found/i.test(bodyText)) {
+            return "ChatGPT says this conversation was not found. Open a valid chat or reload the page before importing.";
+        }
+        if (/unable to load conversation|failed to load conversation/i.test(bodyText)) {
+            return "The chat page has not loaded the conversation yet. Reload the page, wait for messages to appear, then import again.";
+        }
+        return "";
     }
 
     function collectCandidates() {
@@ -82,6 +110,15 @@
         const nestedRole = roleNode?.getAttribute("data-message-author-role");
         if (nestedRole) return normalizeRole(nestedRole);
 
+        if (window.location.hostname.includes("grok.com")) {
+            if (element.querySelector("[class*='response-content-markdown']") || element.classList.contains("response-content-markdown")) {
+                return "assistant";
+            }
+            if (element.classList.contains("message-bubble") || element.closest("[class*='message-bubble']")) {
+                return "user";
+            }
+        }
+
         const aria = [
             element.getAttribute("aria-label"),
             element.getAttribute("data-testid"),
@@ -90,7 +127,7 @@
         ].join(" ").toLowerCase();
 
         if (/\b(user|you|human)\b/.test(aria)) return "user";
-        if (/\b(assistant|chatgpt|gpt|ai)\b/.test(aria)) return "assistant";
+        if (/\b(assistant|chatgpt|gpt|ai|claude|grok)\b/.test(aria)) return "assistant";
         return index % 2 === 0 ? "user" : "assistant";
     }
 
@@ -98,6 +135,7 @@
         const contentNode =
             element.querySelector("[data-message-author-role] .markdown") ||
             element.querySelector(".markdown") ||
+            element.querySelector("[class*='response-content-markdown']") ||
             element.querySelector("[data-testid='message-content']") ||
             element.querySelector("[class*='message-content']") ||
             element;

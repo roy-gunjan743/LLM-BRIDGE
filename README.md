@@ -104,6 +104,7 @@ Temperature: 0.2
 - `https://claude.ai/*`
 - `https://gemini.google.com/*`
 - `https://www.perplexity.ai/*`
+- `https://grok.com/*`
 
 Extraction is most complete on ChatGPT. Other hosts are registered for future compatibility and may need selector tuning.
 

@@ -4,193 +4,469 @@
   <meta charset="UTF-8" />
   <title>LLM Bridge</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      width: 420px;
-      min-height: 560px;
-      background: #181818;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #eeeeee;
+      width: 290px;
+      background: #161718;
+      font-family: 'Inter', sans-serif;
+      color: #e2e4e9;
+      margin: 0;
+      padding: 0;
       overflow: hidden;
     }
-    .header {
+
+    .popup {
+      width: 290px;
+      background: #161718;
+      overflow: hidden;
+    }
+
+    .hd {
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid #222326;
+    }
+
+    .hd-top {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      border-bottom: 1px solid #2d2d2d;
-      background: #222222;
+      justify-content: space-between;
+      margin-bottom: 10px;
     }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
     .mark {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 8px;
-      background: #d9edbf;
-      display: grid;
-      place-items: center;
-      color: #315f0e;
-      font-weight: 800;
-    }
-    h1 { font-size: 15px; line-height: 1.2; }
-    .subtitle { font-size: 11px; color: #8f8f8f; margin-top: 2px; }
-    .ollama-status {
-      margin-left: auto;
+      background: #d4ff4e;
       display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #9a9a9a;
-      font-size: 11px;
-      white-space: nowrap;
-    }
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #68ad2b;
-      box-shadow: 0 0 6px rgba(104, 173, 43, 0.5);
-    }
-    .status-dot.error { background: #df5757; box-shadow: 0 0 6px rgba(223, 87, 87, 0.5); }
-    .body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
-    .btn-row { display: flex; gap: 8px; }
-    .btn {
-      min-height: 38px;
-      border: 1px solid #3b3b3b;
-      border-radius: 8px;
-      background: #282828;
-      color: #e4e4e4;
-      cursor: pointer;
-      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
-      font-size: 13px;
       font-weight: 600;
-      padding: 9px 12px;
-      transition: background 0.16s, border-color 0.16s, opacity 0.16s;
+      font-size: 11px;
+      color: #111;
+      font-family: 'Inter', sans-serif;
     }
-    .btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
-    .btn.primary { background: #3f7417; border-color: #549423; color: #e1f5c8; }
-    .btn.icon { width: 38px; padding: 0; flex: 0 0 auto; }
-    .btn.flex { flex: 1; }
-    .btn:hover:not(:disabled) { background: #333333; border-color: #595959; }
-    .btn.primary:hover:not(:disabled) { background: #4b861d; }
-    .btn:disabled { opacity: 0.42; cursor: not-allowed; }
-    .btn.loading { opacity: 0.62; }
-    .stats-row { display: none; gap: 6px; }
-    .stat-pill {
-      flex: 1;
-      border: 1px solid #303030;
-      background: #232323;
+
+    .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f0f0f0;
+    }
+
+    .sub {
+      font-size: 10px;
+      color: #555;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 1px;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: #4ade80;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: p 2s ease-in-out infinite;
+    }
+
+    .dot.error {
+      background: #ef4444;
+      animation: none;
+    }
+
+    .badge.error {
+      color: #ef4444;
+    }
+
+    @keyframes p {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .3; }
+    }
+
+    .hd-btns {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr 32px;
+      gap: 6px;
+    }
+
+    .btn {
+      padding: 7px 0;
       border-radius: 8px;
-      padding: 7px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #2a2b2e;
+      background: #1e1f21;
+      color: #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all .12s;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      color: #ccc;
+      border-color: #3a3b3e;
+    }
+
+    .btn.g {
+      background: #d4ff4e;
+      border-color: #d4ff4e;
+      color: #111;
+      font-weight: 600;
+    }
+
+    .btn.g:hover:not(:disabled) {
+      background: #c2ed3c;
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .ibtn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #1e1f21;
+      border: 1px solid #2a2b2e;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .12s;
+      outline: none;
+    }
+
+    .ibtn:hover {
+      color: #aaa;
+    }
+
+    .body {
+      padding: 12px;
+    }
+
+    .stats {
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      background: #1a1b1d;
+      border-radius: 8px;
+      padding: 8px;
       text-align: center;
     }
-    .stat-pill .val { font-size: 15px; font-weight: 700; color: #cdeaaa; line-height: 1; }
-    .stat-pill .lbl { font-size: 10px; color: #777777; margin-top: 4px; }
-    .progress-wrap { display: none; }
-    .progress-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-    .progress-label { color: #9b9b9b; font-size: 11.5px; max-width: 310px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .progress-pct { color: #cdeaaa; font-size: 11.5px; font-weight: 700; }
-    .progress-track { width: 100%; height: 5px; background: #2d2d2d; border-radius: 999px; overflow: hidden; }
-    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #579326, #a4d96c); transition: width 0.25s; }
-    .chunk-dots { display: flex; flex-wrap: wrap; gap: 4px; min-height: 10px; margin-top: 8px; }
-    .chunk-dot { width: 6px; height: 6px; border-radius: 50%; background: #416b20; opacity: 0.35; }
-    .chunk-dot.done { opacity: 1; background: #9ad25b; }
-    .chunk-dot.active { opacity: 1; background: #ffffff; }
+
+    .sv {
+      font-size: 17px;
+      font-weight: 600;
+      color: #f0f0f0;
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .sl {
+      font-size: 9px;
+      color: #444;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    #summaryBox {
+      width: 100%;
+      height: 148px;
+      background: #111;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      line-height: 1.75;
+      margin-bottom: 12px;
+      border: 1px solid #222;
+      color: #a78bfa;
+      resize: none;
+      outline: none;
+      display: block;
+    }
+
+    #summaryBox::placeholder {
+      color: #444;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .xbtn {
+      padding: 6px 0;
+      border-radius: 7px;
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #222;
+      background: #1a1b1d;
+      color: #555;
+      text-align: center;
+      transition: all .12s;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+    }
+
+    .xbtn:hover:not(:disabled) {
+      color: #ccc;
+      border-color: #3a3b3e;
+    }
+
+    .xbtn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .sbtn {
+      padding: 8px 0;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #222;
+      background: #1a1b1d;
+      color: #555;
+      text-align: center;
+      transition: all .12s;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+    }
+
+    .sbtn:hover:not(:disabled) {
+      color: #e2e4e9;
+      border-color: #3a3b3e;
+    }
+
+    .sbtn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .sbtn.on {
+      border-color: #a78bfa;
+      color: #a78bfa;
+    }
+
+    .divider {
+      font-size: 9px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #333;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 6px;
+    }
+
+    .progress-wrap {
+      display: none;
+      margin-bottom: 12px;
+    }
+
+    .progress-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .progress-label {
+      color: #555;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .progress-pct {
+      color: #d4ff4e;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: #222;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #d4ff4e;
+      transition: width 0.25s;
+    }
+
+    .chunk-dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 6px;
+    }
+
+    .chunk-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #2a2b2e;
+    }
+
+    .chunk-dot.done {
+      background: #d4ff4e;
+    }
+
+    .chunk-dot.active {
+      background: #fff;
+    }
+
     .banner {
       display: none;
       border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 12px;
+      padding: 6px 8px;
+      font-size: 10px;
       line-height: 1.4;
+      margin-bottom: 10px;
+      font-family: 'JetBrains Mono', monospace;
     }
-    .banner.error { background: rgba(223, 87, 87, 0.12); border: 1px solid rgba(223, 87, 87, 0.35); color: #ff9b9b; }
-    .banner.success { background: rgba(104, 173, 43, 0.12); border: 1px solid rgba(104, 173, 43, 0.35); color: #cdeaaa; }
-    .summary-wrap { position: relative; }
-    #summaryBox {
-      width: 100%;
-      height: 238px;
-      resize: none;
-      background: #222222;
-      border: 1px solid #303030;
-      border-radius: 8px;
-      padding: 12px;
-      color: #dddddd;
-      font: 13px/1.55 inherit;
-      outline: none;
+
+    .banner.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #f87171;
     }
-    #summaryBox::placeholder { color: #666666; }
-    .export-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-    .footer {
-      padding: 9px 16px;
-      border-top: 1px solid #2d2d2d;
+
+    .banner.success {
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+    }
+
+    .foot {
+      padding: 8px 12px;
+      border-top: 1px solid #1e1f21;
       display: flex;
       justify-content: space-between;
-      color: #666666;
-      font-size: 11px;
+    }
+
+    .ft {
+      font-size: 10px;
+      color: #333;
+      font-family: 'JetBrains Mono', monospace;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="mark">LB</div>
-    <div>
-      <h1>LLM Bridge</h1>
-      <div class="subtitle">Local summaries with persisted memory</div>
-    </div>
-    <div class="ollama-status">
-      <span class="status-dot" id="ollamaDot"></span>
-      <span id="ollamaLabel">Checking...</span>
-    </div>
-  </div>
-
-  <div class="body">
-    <div class="btn-row">
-      <button class="btn flex" id="importBtn" type="button" title="Import visible chat">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
-        Import
-      </button>
-      <button class="btn primary flex" id="summarizeBtn" type="button" disabled title="Summarize imported chat">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/></svg>
-        Summarize
-      </button>
-      <button class="btn icon" id="optionsBtn" type="button" title="Settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9c.3.6.9 1 1.6 1h.1a2 2 0 1 1 0 4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
-      </button>
-    </div>
-
-    <div class="stats-row" id="statsRow">
-      <div class="stat-pill"><div class="val" id="statMsgs">-</div><div class="lbl">messages</div></div>
-      <div class="stat-pill"><div class="val" id="statChunks">-</div><div class="lbl">chunks</div></div>
-      <div class="stat-pill"><div class="val" id="statChars">-</div><div class="lbl">characters</div></div>
-    </div>
-
-    <div class="progress-wrap" id="progressWrap">
-      <div class="progress-meta">
-        <span class="progress-label" id="progressLabel">Ready</span>
-        <span class="progress-pct" id="progressPct">0%</span>
+  <div class="popup">
+    <div class="hd">
+      <div class="hd-top">
+        <div class="logo">
+          <div class="mark">LB</div>
+          <div>
+            <div class="name">LLM Bridge</div>
+            <div class="sub">local memory engine</div>
+          </div>
+        </div>
+        <div class="badge" id="ollamaBadge">
+          <div class="dot" id="ollamaDot"></div>
+          <span id="ollamaLabel">running</span>
+        </div>
       </div>
-      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-      <div class="chunk-dots" id="chunkDots"></div>
+      <div class="hd-btns">
+        <button class="btn" id="importBtn" type="button" title="Import visible chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;flex:0 0 auto"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+          import
+        </button>
+        <button class="btn g" id="summarizeBtn" type="button" disabled title="Summarize imported chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;flex:0 0 auto"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/></svg>
+          summarize
+        </button>
+        <button class="ibtn" id="optionsBtn" type="button" aria-label="settings" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex:0 0 auto"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9c.3.6.9 1 1.6 1h.1a2 2 0 1 1 0 4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
+        </button>
+      </div>
     </div>
 
-    <div class="banner error" id="errorBar"></div>
-    <div class="banner success" id="successBar"></div>
+    <div class="body">
+      <div class="stats" id="statsRow">
+        <div class="stat"><span class="sv" id="statMsgs">-</span><div class="sl">messages</div></div>
+        <div class="stat"><span class="sv" id="statChunks">-</span><div class="sl">chunks</div></div>
+        <div class="stat"><span class="sv" id="statChars">-</span><div class="sl">chars</div></div>
+      </div>
 
-    <div class="summary-wrap">
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-meta">
+          <span class="progress-label" id="progressLabel">Ready</span>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="chunk-dots" id="chunkDots"></div>
+      </div>
+
+      <div class="banner error" id="errorBar"></div>
+      <div class="banner success" id="successBar"></div>
+
       <textarea id="summaryBox" placeholder="Summary preview will appear here..." readonly></textarea>
+
+      <div class="divider">export</div>
+      <div class="row" style="margin-bottom:12px">
+        <button class="xbtn" id="copyBtn" type="button" disabled>copy</button>
+        <button class="xbtn" id="downloadTxtBtn" type="button" disabled>TXT</button>
+        <button class="xbtn" id="downloadMdBtn" type="button" disabled>markdown</button>
+      </div>
+
+      <div class="divider">send to</div>
+      <div class="row">
+        <button class="sbtn" id="sendChatgptBtn" type="button" disabled>ChatGPT</button>
+        <button class="sbtn" id="sendClaudeBtn" type="button" disabled>Claude</button>
+        <button class="sbtn" id="sendGrokBtn" type="button" disabled>Grok</button>
+      </div>
     </div>
 
-    <div class="export-row">
-      <button class="btn" id="copyBtn" type="button" disabled>Copy</button>
-      <button class="btn" id="downloadTxtBtn" type="button" disabled>TXT</button>
-      <button class="btn" id="downloadMdBtn" type="button" disabled>Markdown</button>
+    <div class="foot">
+      <span class="ft" id="footerStatus">ready</span>
+      <span class="ft" id="modelLabel">v2.1</span>
     </div>
-  </div>
-
-  <div class="footer">
-    <span id="footerStatus">Ready</span>
-    <span id="modelLabel">v2.1</span>
   </div>
 
   <script src="popup.js"></script>

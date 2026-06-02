@@ -4,6 +4,8 @@
   "version": "2.1",
   "description": "Universal AI Memory Bridge",
   "permissions": [
+    "activeTab",
+    "scripting",
     "storage"
   ],
   "host_permissions": [
@@ -12,6 +14,7 @@
     "https://claude.ai/*",
     "https://gemini.google.com/*",
     "https://www.perplexity.ai/*",
+    "https://grok.com/*",
     "http://127.0.0.1/*",
     "http://localhost/*"
   ],
@@ -29,7 +32,8 @@
         "https://chat.openai.com/*",
         "https://claude.ai/*",
         "https://gemini.google.com/*",
-        "https://www.perplexity.ai/*"
+        "https://www.perplexity.ai/*",
+        "https://grok.com/*"
       ],
       "js": [
         "content.js"

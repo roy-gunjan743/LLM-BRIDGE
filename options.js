@@ -25,6 +25,7 @@ async function loadSettings() {
     fields.model.value = settings.model;
     fields.chunkSize.value = settings.chunkSize;
     fields.temperature.value = settings.temperature;
+    fields.temperature.dispatchEvent(new Event("input"));
     fields.systemPrompt.value = settings.systemPrompt;
 }
 

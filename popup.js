@@ -3,6 +3,9 @@ const summarizeBtn = document.getElementById("summarizeBtn");
 const copyBtn = document.getElementById("copyBtn");
 const downloadTxtBtn = document.getElementById("downloadTxtBtn");
 const downloadMdBtn = document.getElementById("downloadMdBtn");
+const sendChatgptBtn = document.getElementById("sendChatgptBtn");
+const sendClaudeBtn = document.getElementById("sendClaudeBtn");
+const sendGrokBtn = document.getElementById("sendGrokBtn");
 const optionsBtn = document.getElementById("optionsBtn");
 const summaryBox = document.getElementById("summaryBox");
 const progressWrap = document.getElementById("progressWrap");
@@ -36,11 +39,14 @@ summarizeBtn.addEventListener("click", summarizeChat);
 copyBtn.addEventListener("click", copySummary);
 downloadTxtBtn.addEventListener("click", () => downloadSummary("txt"));
 downloadMdBtn.addEventListener("click", () => downloadSummary("md"));
+sendChatgptBtn.addEventListener("click", () => sendToChat("chatgpt"));
+sendClaudeBtn.addEventListener("click", () => sendToChat("claude"));
+sendGrokBtn.addEventListener("click", () => sendToChat("grok"));
 optionsBtn.addEventListener("click", () => chrome.runtime.openOptionsPage());
 
 async function init() {
     await refreshState();
-    await checkOllama();
+    checkOllama();
     pollTimer = setInterval(refreshState, 1000);
 }
 
@@ -49,40 +55,41 @@ async function importChat() {
     clearBanners();
     setBusy(true, "Importing...");
 
-    const response = await sendMessage({ action: "extractChat" });
-    if (!response?.success) {
-        showError(response);
-    } else {
-        showSuccess(`Imported ${response.chats.length} messages.`);
-    }
+    try {
+        const response = await sendMessage({ action: "extractChat" }, 15000);
+        if (!response?.success) {
+            showError(response);
+        } else {
+            showSuccess(`Imported ${response.chats.length} messages.`);
+        }
 
-    await refreshState();
-    setBusy(false);
+        await refreshState();
+    } finally {
+        setBusy(false);
+    }
 }
 
 async function summarizeChat() {
     if (isBusy()) return;
-    if (!state.chats.length) {
-        showError({ error: "No Chats Found", detail: "Import a chat before summarizing." });
-        return;
-    }
-
     clearBanners();
     setBusy(true, "Starting summary...");
 
-    const response = await sendMessage({ action: "summarizeChats" });
-    if (!response?.success) {
-        showError(response);
-        setBusy(false);
-        return;
-    }
+    try {
+        const response = await sendMessage({ action: "summarizeChats" }, 15000);
+        if (!response?.success) {
+            showError(response);
+            return;
+        }
 
-    showSuccess("Summary started. You can close this popup; progress will continue.");
-    await refreshState();
+        showSuccess("Summary started. You can close this popup; progress will continue.");
+        await refreshState();
+    } finally {
+        setBusy(false);
+    }
 }
 
 async function refreshState() {
-    const response = await sendMessage({ action: "getState" });
+    const response = await sendMessage({ action: "getState" }, 8000);
     if (!response?.success) {
         showError(response);
         return;
@@ -93,7 +100,8 @@ async function refreshState() {
 }
 
 async function checkOllama() {
-    const response = await sendMessage({ action: "testOllama" });
+    ollamaLabel.textContent = "Checking...";
+    const response = await sendMessage({ action: "testOllama" }, 10000);
     ollamaDot.classList.toggle("error", !response?.success);
     ollamaLabel.textContent = response?.success ? "Ollama running" : "Ollama offline";
 }
@@ -125,10 +133,13 @@ function renderState() {
 
     const busy = ["extracting", "summarizing"].includes(progress.status);
     setBusy(busy, progress.label);
-    summarizeBtn.disabled = busy || !chats.length;
+    summarizeBtn.disabled = busy;
     copyBtn.disabled = !summary;
     downloadTxtBtn.disabled = !summary;
     downloadMdBtn.disabled = !summary;
+    sendChatgptBtn.disabled = !summary || busy;
+    sendClaudeBtn.disabled = !summary || busy;
+    sendGrokBtn.disabled = !summary || busy;
     footerStatus.textContent = progress.label || "Ready";
 
     if (progress.status === "complete" && summary) {
@@ -157,7 +168,7 @@ function renderDots(total, completed) {
 
 function setBusy(busy, label = "") {
     importBtn.disabled = busy;
-    summarizeBtn.disabled = busy || !state.chats?.length;
+    summarizeBtn.disabled = busy;
     importBtn.classList.toggle("loading", busy);
     summarizeBtn.classList.toggle("loading", busy);
     if (label) footerStatus.textContent = label;
@@ -169,13 +180,31 @@ function isBusy() {
 
 async function copySummary() {
     if (!state.summary) return;
+    const promptMemory = buildPromptMemory(state.summary);
     try {
-        await navigator.clipboard.writeText(state.summary);
-        showSuccess("Summary copied.");
+        await navigator.clipboard.writeText(promptMemory);
+        showSuccess("Prompt-ready memory copied.");
     } catch (_) {
         summaryBox.select();
         document.execCommand("copy");
         showSuccess("Summary copied.");
+    }
+}
+
+async function sendToChat(target) {
+    if (!state.summary) return;
+    const promptMemory = buildPromptMemory(state.summary);
+    clearBanners();
+    setBusy(true, `Opening ${target === "chatgpt" ? "ChatGPT" : target === "claude" ? "Claude" : "Grok"}...`);
+    try {
+        const response = await sendMessage({ action: "sendToChat", target, text: promptMemory });
+        if (!response?.success) {
+            showError(response);
+        } else {
+            showSuccess("Successfully opened tab!");
+        }
+    } finally {
+        setBusy(false);
     }
 }
 
@@ -202,6 +231,20 @@ function downloadSummary(format) {
     URL.revokeObjectURL(url);
 }
 
+function buildPromptMemory(summary) {
+    return [
+        "Use the following structured memory as silent context for this conversation.",
+        "Do not explain the memory object unless I ask.",
+        "Use it to answer directly when my question can be answered from the memory.",
+        "For project questions, use remembered file names, roles, tech stack, goals, decisions, open issues, and next steps.",
+        "Do not ask me to provide files or a project tree when the memory already contains the answer.",
+        "If the memory conflicts with my latest message, follow my latest message.",
+        "",
+        "STRUCTURED_MEMORY_JSON:",
+        summary
+    ].join("\n");
+}
+
 function showError(response) {
     const title = response?.error || "Summary Failure";
     const detail = response?.detail ? `: ${response.detail}` : "";
@@ -223,9 +266,24 @@ function clearBanners() {
     successBar.textContent = "";
 }
 
-function sendMessage(message) {
+function sendMessage(message, timeoutMs = 12000) {
     return new Promise((resolve) => {
+        let settled = false;
+        const timeout = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            resolve({
+                success: false,
+                error: "Extension Not Responding",
+                detail: "Reload the extension from chrome://extensions, then try again."
+            });
+        }, timeoutMs);
+
         chrome.runtime.sendMessage(message, (response) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+
             if (chrome.runtime.lastError) {
                 resolve({
                     success: false,
