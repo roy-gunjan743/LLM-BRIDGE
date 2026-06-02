@@ -1,7 +1,12 @@
 const form = document.getElementById("settingsForm");
 const testBtn = document.getElementById("testBtn");
 const statusEl = document.getElementById("status");
+const providerEl = document.getElementById("provider");
+
 const fields = {
+    provider: providerEl,
+    geminiApiKey: document.getElementById("geminiApiKey"),
+    geminiModel: document.getElementById("geminiModel"),
     ollamaUrl: document.getElementById("ollamaUrl"),
     model: document.getElementById("model"),
     chunkSize: document.getElementById("chunkSize"),
@@ -9,9 +14,23 @@ const fields = {
     systemPrompt: document.getElementById("systemPrompt")
 };
 
+const providerSections = {
+    gemini: document.getElementById("geminiFields"),
+    ollama: document.getElementById("ollamaFields"),
+    chrome: document.getElementById("chromeFields")
+};
+
 document.addEventListener("DOMContentLoaded", loadSettings);
 form.addEventListener("submit", saveSettings);
-testBtn.addEventListener("click", testOllama);
+testBtn.addEventListener("click", testConnection);
+providerEl.addEventListener("change", toggleProviderFields);
+
+function toggleProviderFields() {
+    const selected = providerEl.value;
+    Object.entries(providerSections).forEach(([key, el]) => {
+        el.style.display = key === selected ? "" : "none";
+    });
+}
 
 async function loadSettings() {
     const response = await sendMessage({ action: "getSettings" });
@@ -21,12 +40,16 @@ async function loadSettings() {
     }
 
     const settings = response.settings;
+    fields.provider.value = settings.provider || "gemini";
+    fields.geminiApiKey.value = settings.geminiApiKey || "";
+    fields.geminiModel.value = settings.geminiModel || "gemini-2.5-flash";
     fields.ollamaUrl.value = settings.ollamaUrl;
     fields.model.value = settings.model;
     fields.chunkSize.value = settings.chunkSize;
     fields.temperature.value = settings.temperature;
     fields.temperature.dispatchEvent(new Event("input"));
     fields.systemPrompt.value = settings.systemPrompt;
+    toggleProviderFields();
 }
 
 async function saveSettings(event) {
@@ -42,18 +65,21 @@ async function saveSettings(event) {
     setStatus("Settings saved.");
 }
 
-async function testOllama() {
+async function testConnection() {
     await sendMessage({ action: "saveSettings", settings: readSettings() });
     const response = await sendMessage({ action: "testOllama" });
     if (!response?.success) {
-        setStatus(`${response?.error || "Ollama Offline"}: ${response?.detail || "Check Ollama."}`, true);
+        setStatus(`${response?.error || "Offline"}: ${response?.detail || "Check settings."}`, true);
         return;
     }
-    setStatus("Ollama connection successful.");
+    setStatus(response.message || "Connection successful.");
 }
 
 function readSettings() {
     return {
+        provider: fields.provider.value,
+        geminiApiKey: fields.geminiApiKey.value,
+        geminiModel: fields.geminiModel.value,
         ollamaUrl: fields.ollamaUrl.value,
         model: fields.model.value,
         chunkSize: Number(fields.chunkSize.value),

@@ -256,34 +256,73 @@
     <div class="s-page">
       <div class="s-top">
         <h1>LLM Bridge <span style="color:#5b6af7">Settings</span></h1>
-        <p>configure local ollama summarization and memory generation</p>
+        <p>configure ai provider, summarization, and memory generation</p>
       </div>
 
       <form id="settingsForm">
         <div class="s-card">
-          <div class="s-section-label">connection</div>
+          <div class="s-section-label">ai provider</div>
           <div class="s-field">
-            <div class="s-label">ollama url</div>
-            <input class="s-input" id="ollamaUrl" type="url" required placeholder="http://127.0.0.1:11434" />
+            <div class="s-label">provider</div>
+            <select class="s-input" id="provider">
+              <option value="gemini">Google Gemini API (free)</option>
+              <option value="chrome">Chrome Built-in AI (zero setup)</option>
+              <option value="ollama">Ollama (local)</option>
+            </select>
           </div>
-          <div class="s-row">
+
+          <!-- Gemini fields -->
+          <div id="geminiFields">
             <div class="s-field">
-              <div class="s-label">model name</div>
-              <input class="s-input" id="model" type="text" required placeholder="llama3.2" />
+              <div class="s-label">gemini api key <span class="s-badge">free @ aistudio.google.com</span></div>
+              <input class="s-input" id="geminiApiKey" type="password" placeholder="paste your Gemini API key here" />
             </div>
+            <div class="s-field">
+              <div class="s-label">gemini model</div>
+              <input class="s-input" id="geminiModel" type="text" placeholder="gemini-2.5-flash" />
+            </div>
+          </div>
+
+          <!-- Ollama fields -->
+          <div id="ollamaFields" style="display:none">
+            <div class="s-field">
+              <div class="s-label">ollama url</div>
+              <input class="s-input" id="ollamaUrl" type="url" placeholder="http://127.0.0.1:11434" />
+            </div>
+            <div class="s-field">
+              <div class="s-label">ollama model name</div>
+              <input class="s-input" id="model" type="text" placeholder="llama3.2" />
+            </div>
+          </div>
+
+          <!-- Chrome AI info -->
+          <div id="chromeFields" style="display:none">
+            <div class="s-field">
+              <div style="background:#1a1d2a; border:1px solid #252b3e; border-radius:9px; padding:12px 14px; color:#7b82a0; font-family:'JetBrains Mono',monospace; font-size:11.5px; line-height:1.6">
+                ✦ No API key needed — runs locally in your browser<br>
+                ✦ Requires Chrome 138+ with 16 GB RAM<br>
+                ✦ Model is downloaded on first use (~1.7 GB)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-section-label">generation</div>
+          <div class="s-row">
             <div class="s-field">
               <div class="s-label">chunk size</div>
               <input class="s-input" id="chunkSize" type="number" min="1200" max="20000" step="100" required />
             </div>
-          </div>
-          <div class="s-field">
-            <div class="s-label">
-              temperature
-              <span class="s-badge" id="sv">0.2</span>
-            </div>
-            <div class="s-temp-wrap">
-              <input class="s-range" type="range" min="0" max="2" step="0.1" value="0.2" id="temperature"
-                oninput="document.getElementById('sv').textContent=this.value;this.style.background='linear-gradient(to right,#5b6af7 '+(this.value*50)+'%,#1e2230 '+(this.value*50)+'%)'" />
+            <div class="s-field">
+              <div class="s-label">
+                temperature
+                <span class="s-badge" id="sv">0.2</span>
+              </div>
+              <div class="s-temp-wrap">
+                <input class="s-range" type="range" min="0" max="2" step="0.1" value="0.2" id="temperature"
+                  oninput="document.getElementById('sv').textContent=this.value;this.style.background='linear-gradient(to right,#5b6af7 '+(this.value*50)+'%,#1e2230 '+(this.value*50)+'%)'" />
+              </div>
             </div>
           </div>
         </div>
@@ -297,7 +336,7 @@
 
         <div class="s-footer">
           <button class="s-btn s-btn-save" type="submit">save settings</button>
-          <button class="s-btn-test" type="button" id="testBtn">test ollama</button>
+          <button class="s-btn-test" type="button" id="testBtn">test connection</button>
           <span class="status" id="status"></span>
         </div>
       </form>

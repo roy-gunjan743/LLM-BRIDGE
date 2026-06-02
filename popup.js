@@ -100,10 +100,12 @@ async function refreshState() {
 }
 
 async function checkOllama() {
-    ollamaLabel.textContent = "Checking...";
+    ollamaLabel.textContent = "checking...";
     const response = await sendMessage({ action: "testOllama" }, 10000);
     ollamaDot.classList.toggle("error", !response?.success);
-    ollamaLabel.textContent = response?.success ? "Ollama running" : "Ollama offline";
+    ollamaLabel.textContent = response?.success
+        ? (response.message || "connected")
+        : (response?.detail || "offline");
 }
 
 function renderState() {
@@ -113,7 +115,9 @@ function renderState() {
     const settings = state.settings || {};
 
     summaryBox.value = summary;
-    modelLabel.textContent = settings.model ? `v2.1 | ${settings.model}` : "v2.1";
+    const providerNames = { gemini: "Gemini", chrome: "Chrome AI", ollama: settings.model || "Ollama" };
+    const providerTag = providerNames[settings.provider] || "v2.1";
+    modelLabel.textContent = `v2.1 | ${providerTag}`;
 
     const chars = chats.reduce((total, chat) => total + (chat.content || "").length, 0);
     const totalChunks = progress.totalChunks || estimateChunks(chars, settings.chunkSize);

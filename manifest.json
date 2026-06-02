@@ -15,6 +15,7 @@
     "https://gemini.google.com/*",
     "https://www.perplexity.ai/*",
     "https://grok.com/*",
+    "https://generativelanguage.googleapis.com/*",
     "http://127.0.0.1/*",
     "http://localhost/*"
   ],

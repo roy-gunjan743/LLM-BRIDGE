@@ -5,6 +5,9 @@ MemoryEngine.initialize().catch((error) => {
 });
 
 const DEFAULT_SETTINGS = {
+    provider: "gemini",
+    geminiApiKey: "",
+    geminiModel: "gemini-2.5-flash",
     ollamaUrl: "http://127.0.0.1:11434",
     model: "llama3.2",
     chunkSize: 4000,
@@ -102,7 +105,7 @@ async function handleMessage(request) {
         case "summarizeChats":
             return startSummaryJob();
         case "testOllama":
-            return testOllamaConnection();
+            return testConnection();
         case "getSettings":
             return { success: true, settings: await getSettings() };
         case "saveSettings":
@@ -242,7 +245,7 @@ async function runSummaryJob() {
                 chunks[0]
             ].join("\n");
 
-            finalSummaryRaw = await generateWithOllama(prompt, settings);
+            finalSummaryRaw = await generateText(prompt, settings);
 
             await ensureProgress("summarizing", "Finalizing summary", 80, "", 1, 1);
         } else {
@@ -268,7 +271,7 @@ async function runSummaryJob() {
                     chunks[index]
                 ].join("\n");
 
-                const result = await generateWithOllama(prompt, settings);
+                const result = await generateText(prompt, settings);
                 partials.push(cleanText(result));
 
                 await ensureProgress(
@@ -304,7 +307,7 @@ async function runSummaryJob() {
             chats
         );
         const memory = await MemoryEngine.generateMemory(chats, summary, {
-            generate: (prompt) => generateWithOllama(prompt, settings)
+            generate: (prompt) => generateText(prompt, settings)
         });
 
         const savedSummary = {
@@ -342,13 +345,31 @@ async function runSummaryJob() {
     }
 }
 
-async function testOllamaConnection() {
+async function testConnection() {
     try {
         const settings = await getSettings();
-        await callOllama("/api/tags", { method: "GET" }, settings, 4000, 1);
-        return { success: true, message: "Ollama running" };
+        if (settings.provider === "gemini") {
+            if (!settings.geminiApiKey) {
+                return fail("OLLAMA_OFFLINE", "Enter your Gemini API key in Settings.");
+            }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${settings.geminiApiKey}`;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 6000);
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeout);
+            if (!response.ok) throw new Error(`Gemini returned HTTP ${response.status}`);
+            return { success: true, message: "Gemini ready" };
+        } else if (settings.provider === "chrome") {
+            if (typeof self.Summarizer === "undefined") {
+                return fail("OLLAMA_OFFLINE", "Chrome Built-in AI is not available. Use Chrome 138+ with 16GB RAM.");
+            }
+            return { success: true, message: "Chrome AI ready" };
+        } else {
+            await callOllama("/api/tags", { method: "GET" }, settings, 4000, 1);
+            return { success: true, message: "Ollama running" };
+        }
     } catch (error) {
-        return fail(error.name === "AbortError" ? "TIMEOUT" : "OLLAMA_OFFLINE", "Start Ollama and check your URL.");
+        return fail(error.name === "AbortError" ? "TIMEOUT" : "OLLAMA_OFFLINE", "Check your provider settings.");
     }
 }
 
@@ -376,6 +397,72 @@ async function generateWithOllama(prompt, settings) {
         throw new Error("Ollama returned an empty response.");
     }
     return data.response;
+}
+
+async function generateWithGemini(prompt, settings) {
+    if (!settings.geminiApiKey) {
+        throw new Error("Gemini API key is not set. Open Settings and enter your key.");
+    }
+    const model = settings.geminiModel || "gemini-2.5-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${settings.geminiApiKey}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+
+    let lastError;
+    for (let attempt = 0; attempt <= 2; attempt++) {
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        temperature: settings.temperature
+                    }
+                })
+            });
+            clearTimeout(timeout);
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData?.error?.message || `Gemini returned HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) throw new Error("Gemini returned an empty response.");
+            return text;
+        } catch (error) {
+            clearTimeout(timeout);
+            lastError = error;
+            if (attempt < 2) await delay(600 * (attempt + 1));
+        }
+    }
+    throw lastError;
+}
+
+async function generateWithChromeAI(prompt) {
+    if (typeof self.Summarizer === "undefined") {
+        throw new Error("Chrome Built-in AI is not available in this browser. Use Chrome 138+ with sufficient hardware.");
+    }
+    const summarizer = await Summarizer.create({
+        type: "key-points",
+        format: "plain-text",
+        length: "long"
+    });
+    const result = await summarizer.summarize(prompt);
+    if (!result) throw new Error("Chrome AI returned an empty response.");
+    return result;
+}
+
+async function generateText(prompt, settings) {
+    if (settings.provider === "gemini") {
+        return generateWithGemini(prompt, settings);
+    } else if (settings.provider === "chrome") {
+        return generateWithChromeAI(prompt);
+    } else {
+        return generateWithOllama(prompt, settings);
+    }
 }
 
 async function callOllama(path, options, settings, timeoutMs, retries) {
@@ -851,7 +938,16 @@ function normalizeSettings(settings) {
         systemPrompt = DEFAULT_SETTINGS.systemPrompt;
     }
 
+    const provider = ["gemini", "chrome", "ollama"].includes(source.provider)
+        ? source.provider
+        : DEFAULT_SETTINGS.provider;
+
     return {
+        provider,
+        geminiApiKey: typeof source.geminiApiKey === "string" ? source.geminiApiKey.trim() : DEFAULT_SETTINGS.geminiApiKey,
+        geminiModel: typeof source.geminiModel === "string" && source.geminiModel.trim()
+            ? source.geminiModel.trim()
+            : DEFAULT_SETTINGS.geminiModel,
         ollamaUrl: typeof source.ollamaUrl === "string" && source.ollamaUrl.trim()
             ? source.ollamaUrl.trim()
             : DEFAULT_SETTINGS.ollamaUrl,
