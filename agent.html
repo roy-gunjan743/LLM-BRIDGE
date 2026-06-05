@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Bridge — AI Agent</title>
+  <meta name="description" content="AI Agent that monitors your memories, finds recurring ideas, and generates actionable recommendations." />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080b12;
+      --surface: #0d1120;
+      --s2:      #121828;
+      --s3:      #161e30;
+      --border:  #1a2235;
+      --b2:      #222d45;
+      --text:    #dde4f5;
+      --muted:   #3d4e70;
+      --muted2:  #5a6d94;
+      --accent:  #6c7fff;
+      --green:   #34d399;
+      --purple:  #a78bfa;
+      --orange:  #fb923c;
+      --red:     #f87171;
+      --cyan:    #22d3ee;
+      --gold:    #f5c842;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; }
+    body { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Top bar ─────────────────────────────────────────────── */
+    #topbar {
+      flex: 0 0 auto;
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: linear-gradient(135deg, #6c7fff, #a78bfa);
+      display: flex; align-items: center; justify-content: center;
+      flex: 0 0 auto;
+    }
+    .logo-text { font-size: 15px; font-weight: 700; }
+    .logo-sub  { font-size: 10px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; }
+    .divider-v { width: 1px; height: 28px; background: var(--border); flex: 0 0 auto; }
+
+    .tb-stat { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted2); }
+    .tb-stat strong { color: var(--accent); }
+
+    .tb-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+    .run-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: 10px;
+      border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px; font-weight: 600;
+      transition: all .15s;
+      box-shadow: 0 0 24px rgba(108,127,255,.25);
+    }
+    .run-btn:hover { transform: translateY(-1px); box-shadow: 0 0 32px rgba(108,127,255,.4); }
+    .run-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .agent-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #fff;
+      animation: agentPulse 1.8s ease-in-out infinite;
+    }
+    @keyframes agentPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    /* ── Main scroll area ────────────────────────────────────── */
+    #main {
+      flex: 1 1 auto; overflow-y: auto; padding: 28px 32px;
+    }
+    #main::-webkit-scrollbar { width: 5px; }
+    #main::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 3px; }
+
+    /* ── Idle state ──────────────────────────────────────────── */
+    #idleState {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 60vh; gap: 20px;
+    }
+
+    .idle-orb {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(108,127,255,.3), rgba(167,139,250,.1));
+      border: 1px solid rgba(108,127,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      animation: orbFloat 4s ease-in-out infinite;
+    }
+    @keyframes orbFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+    .idle-title { font-size: 22px; font-weight: 700; }
+    .idle-sub {
+      font-size: 13px; color: var(--muted2);
+      font-family: 'JetBrains Mono', monospace;
+      text-align: center; max-width: 400px; line-height: 1.8;
+    }
+
+    .capability-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 10px; max-width: 460px; width: 100%;
+    }
+
+    .cap-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+
+    .cap-icon {
+      font-size: 18px; flex: 0 0 auto; margin-top: 1px;
+    }
+
+    .cap-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .cap-desc  { font-size: 11px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; line-height: 1.5; }
+
+    /* ── Progress bar ────────────────────────────────────────── */
+    #progressSection {
+      display: none; margin-bottom: 28px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 22px;
+    }
+
+    .progress-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+
+    .progress-label {
+      font-size: 13px; font-weight: 500; color: var(--text);
+    }
+
+    .progress-track {
+      width: 100%; height: 4px; background: var(--border);
+      border-radius: 99px; overflow: hidden; margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--purple));
+      transition: width .4s ease;
+    }
+
+    .progress-steps {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--muted2);
+    }
+
+    /* ── Results ─────────────────────────────────────────────── */
+    #resultsSection { display: none; }
+
+    .section-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px; margin-top: 28px;
+    }
+
+    .section-header:first-child { margin-top: 0; }
+
+    .section-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex: 0 0 auto;
+    }
+
+    .section-title { font-size: 16px; font-weight: 700; }
+    .section-sub   { font-size: 11px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+
+    /* ── Recurring topics ────────────────────────────────────── */
+    .topic-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .topic-row {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      transition: border-color .15s;
+    }
+    .topic-row:hover { border-color: var(--b2); }
+
+    .topic-rank {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--muted); min-width: 20px;
+      text-align: right;
+    }
+
+    .topic-name {
+      flex: 1; font-size: 13px; font-weight: 500; color: var(--text);
+    }
+
+    .topic-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--muted2);
+      margin-right: 10px; white-space: nowrap;
+    }
+
+    .topic-bar-wrap { width: 100px; }
+
+    .topic-bar {
+      height: 4px; border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--purple));
+      transition: width .6s ease;
+    }
+
+    /* ── Weekly digest ───────────────────────────────────────── */
+    .digest-card {
+      background: linear-gradient(135deg, rgba(108,127,255,.07), rgba(167,139,250,.07));
+      border: 1px solid rgba(108,127,255,.2);
+      border-radius: 14px; padding: 22px 24px;
+    }
+
+    .digest-text {
+      font-size: 13.5px; line-height: 1.85; color: #b0bcee;
+    }
+
+    .digest-bullet {
+      display: flex; gap: 10px; margin-bottom: 10px;
+    }
+
+    .digest-bullet-dot {
+      color: var(--accent); flex: 0 0 auto; margin-top: 3px;
+    }
+
+    /* ── Recommendations ─────────────────────────────────────── */
+    .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+
+    .rec-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 13px; padding: 18px;
+      transition: all .15s;
+      position: relative; overflow: hidden;
+    }
+    .rec-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+    }
+    .rec-card:hover { border-color: var(--b2); transform: translateY(-2px); }
+
+    .rec-priority {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; padding: 2px 8px;
+      border-radius: 4px; display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .rec-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .rec-body  { font-size: 12px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; line-height: 1.65; }
+
+    .rec-evidence {
+      margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 10px; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Spinner ─────────────────────────────────────────────── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div id="topbar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M22 2 12 12"/><path d="m22 2-5 5"/><path d="m22 2-5 0"/><path d="m22 2 0 5"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">LLM Bridge</div>
+        <div class="logo-sub">ai agent</div>
+      </div>
+    </div>
+    <div class="divider-v"></div>
+    <div class="tb-stat" id="topStat">loading…</div>
+    <div class="tb-right">
+      <button class="run-btn" id="runBtn">
+        <div class="agent-dot"></div>
+        Run Analysis
+      </button>
+    </div>
+  </div>
+
+  <div id="main">
+
+    <!-- Idle state -->
+    <div id="idleState">
+      <div class="idle-orb">🤖</div>
+      <div class="idle-title">AI Agent Ready</div>
+      <div class="idle-sub">The agent monitors all your memories, finds recurring ideas, and generates actionable insights. Click <strong>Run Analysis</strong> to start.</div>
+      <div class="capability-grid">
+        <div class="cap-card"><div class="cap-icon">🔁</div><div><div class="cap-title">Recurring Ideas</div><div class="cap-desc">Finds concepts mentioned most across all sessions</div></div></div>
+        <div class="cap-card"><div class="cap-icon">📋</div><div><div class="cap-title">Weekly Digest</div><div class="cap-desc">AI-generated summary of your recent memory activity</div></div></div>
+        <div class="cap-card"><div class="cap-icon">💡</div><div><div class="cap-title">Smart Recommendations</div><div class="cap-desc">Suggests next steps based on detected patterns</div></div></div>
+        <div class="cap-card"><div class="cap-icon">📈</div><div><div class="cap-title">Topic Trends</div><div class="cap-desc">See which ideas appear most frequently over time</div></div></div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div id="progressSection">
+      <div class="progress-header">
+        <div class="spinner"></div>
+        <div class="progress-label" id="progressLabel">Initializing…</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-steps" id="progressSteps"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsSection">
+
+      <!-- Recurring topics -->
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(108,127,255,.15)">🔁</div>
+        <div>
+          <div class="section-title">Recurring Concepts</div>
+          <div class="section-sub" id="topicsSubtitle"></div>
+        </div>
+      </div>
+      <div class="topic-list" id="topicList"></div>
+
+      <!-- Weekly digest -->
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(52,211,153,.15)">📋</div>
+        <div>
+          <div class="section-title">Memory Digest</div>
+          <div class="section-sub">AI-synthesized overview of your recent work</div>
+        </div>
+      </div>
+      <div class="digest-card">
+        <div class="digest-text" id="digestText">Generating…</div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(245,200,66,.15)">💡</div>
+        <div>
+          <div class="section-title">AI Recommendations</div>
+          <div class="section-sub">Based on patterns found in your memories</div>
+        </div>
+      </div>
+      <div class="rec-grid" id="recGrid"></div>
+
+    </div>
+  </div>
+
+  <script src="agent.js"></script>
+</body>
+</html>

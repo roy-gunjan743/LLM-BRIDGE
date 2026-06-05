@@ -6,8 +6,12 @@ const downloadMdBtn = document.getElementById("downloadMdBtn");
 const sendChatgptBtn = document.getElementById("sendChatgptBtn");
 const sendClaudeBtn = document.getElementById("sendClaudeBtn");
 const sendGrokBtn = document.getElementById("sendGrokBtn");
-const optionsBtn = document.getElementById("optionsBtn");
-const summaryBox = document.getElementById("summaryBox");
+const optionsBtn    = document.getElementById("optionsBtn");
+const graphBtn      = document.getElementById("graphBtn");
+const timelineBtn   = document.getElementById("timelineBtn");
+const recallBtn     = document.getElementById("recallBtn");
+const agentBtn      = document.getElementById("agentBtn");
+const summaryBox    = document.getElementById("summaryBox");
 const progressWrap = document.getElementById("progressWrap");
 const progressFill = document.getElementById("progressFill");
 const progressLabel = document.getElementById("progressLabel");
@@ -27,6 +31,8 @@ const modelLabel = document.getElementById("modelLabel");
 let state = {
     chats: [],
     summary: "",
+    memory: "",
+    graph: null,
     progress: { status: "idle", percent: 0, label: "Ready", totalChunks: 0, completedChunks: 0 },
     settings: {}
 };
@@ -43,11 +49,25 @@ sendChatgptBtn.addEventListener("click", () => sendToChat("chatgpt"));
 sendClaudeBtn.addEventListener("click", () => sendToChat("claude"));
 sendGrokBtn.addEventListener("click", () => sendToChat("grok"));
 optionsBtn.addEventListener("click", () => chrome.runtime.openOptionsPage());
+graphBtn.addEventListener("click", openMemoryGraph);
+timelineBtn.addEventListener("click", openTimeline);
+recallBtn.addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL("recall.html") }));
+agentBtn.addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL("agent.html") }));
 
 async function init() {
     await refreshState();
     checkOllama();
     pollTimer = setInterval(refreshState, 1000);
+}
+
+async function openMemoryGraph() {
+    const graphUrl = chrome.runtime.getURL("graph.html");
+    chrome.tabs.create({ url: graphUrl });
+}
+
+async function openTimeline() {
+    const url = chrome.runtime.getURL("timeline.html");
+    chrome.tabs.create({ url });
 }
 
 async function importChat() {
@@ -144,6 +164,30 @@ function renderState() {
     sendChatgptBtn.disabled = !summary || busy;
     sendClaudeBtn.disabled = !summary || busy;
     sendGrokBtn.disabled = !summary || busy;
+
+    // Graph button: enabled if any graph data is stored
+    const hasGraph = state.graph && Array.isArray(state.graph.nodes) && state.graph.nodes.length > 0;
+    graphBtn.disabled = !hasGraph;
+    graphBtn.style.opacity = hasGraph ? "1" : "0.35";
+    graphBtn.title = hasGraph
+        ? `Open Memory Graph (${state.graph.nodes.length} nodes)`
+        : "Run Summarize first to build the graph";
+
+    // Timeline button
+    const summaries = Array.isArray(state.summaries) ? state.summaries : [];
+    timelineBtn.disabled = summaries.length === 0;
+    timelineBtn.style.opacity = summaries.length > 0 ? "1" : "0.3";
+    timelineBtn.title = summaries.length > 0
+        ? `Timeline (${summaries.length} session${summaries.length !== 1 ? "s" : ""})`
+        : "Run Summarize first";
+
+    // Recall + Agent buttons
+    const hasSessions = summaries.length > 0;
+    recallBtn.disabled = !hasSessions;
+    recallBtn.style.opacity = hasSessions ? "1" : "0.3";
+    agentBtn.disabled = !hasSessions;
+    agentBtn.style.opacity = hasSessions ? "1" : "0.3";
+
     footerStatus.textContent = progress.label || "Ready";
 
     if (progress.status === "complete" && summary) {

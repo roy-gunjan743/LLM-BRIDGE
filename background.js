@@ -1,4 +1,5 @@
 importScripts("memory.js");
+importScripts("graph_engine.js");
 
 MemoryEngine.initialize().catch((error) => {
     console.warn("Memory initialization failed", error);
@@ -61,6 +62,7 @@ const STORAGE_KEYS = {
     summary: "latestSummary",
     summaries: "savedSummaries",
     memory: "projectMemory",
+    graph: "memoryGraph",
     progress: "progressState",
     settings: "settings",
     importMeta: "importMeta"
@@ -112,9 +114,30 @@ async function handleMessage(request) {
             return saveSettings(request.settings);
         case "getMemory":
             return { success: true, memory: await MemoryEngine.getMemory() };
+        case "getGraph":
+            return { success: true, graph: await GraphEngine.getGraph() };
+        case "searchGraph": {
+            const graph = await GraphEngine.getGraph();
+            return { success: true, graph: GraphEngine.searchGraph(graph, request.query || "") };
+        }
+        case "clearGraph":
+            await GraphEngine.clearGraph();
+            return { success: true };
         case "clearError":
             await updateProgress({ error: "" });
             return { success: true };
+        case "smartRecall": {
+            if (typeof request.prompt !== "string" || !request.prompt.trim()) {
+                return fail("SUMMARY", "No prompt provided.");
+            }
+            try {
+                const settings = await getSettings();
+                const answer = await generateText(request.prompt.trim(), settings);
+                return { success: true, answer: cleanText(answer) };
+            } catch (err) {
+                return fail("SUMMARY", err.message);
+            }
+        }
         case "sendToChat":
             return startSendToChatJob(request.target, request.text);
         default:
@@ -128,10 +151,16 @@ async function getState() {
         STORAGE_KEYS.summary,
         STORAGE_KEYS.summaries,
         STORAGE_KEYS.memory,
+        STORAGE_KEYS.graph,
         STORAGE_KEYS.progress,
         STORAGE_KEYS.settings,
         STORAGE_KEYS.importMeta
     ]);
+
+    const rawGraph = data[STORAGE_KEYS.graph];
+    const graph = rawGraph && typeof rawGraph === "object"
+        ? rawGraph
+        : { nodes: [], edges: [], updatedAt: 0 };
 
     return {
         success: true,
@@ -139,6 +168,7 @@ async function getState() {
         summary: typeof data[STORAGE_KEYS.summary] === "string" ? data[STORAGE_KEYS.summary] : "",
         summaries: Array.isArray(data[STORAGE_KEYS.summaries]) ? data[STORAGE_KEYS.summaries] : [],
         memory: typeof data[STORAGE_KEYS.memory] === "string" ? data[STORAGE_KEYS.memory] : "",
+        graph,
         progress: normalizeProgress(data[STORAGE_KEYS.progress]),
         settings: await getSettings(),
         importMeta: normalizeImportMeta(data[STORAGE_KEYS.importMeta])
@@ -309,6 +339,14 @@ async function runSummaryJob() {
         const memory = await MemoryEngine.generateMemory(chats, summary, {
             generate: (prompt) => generateText(prompt, settings)
         });
+
+        // Build and merge memory graph
+        try {
+            const subgraph = GraphEngine.buildFromMemory(memory);
+            await GraphEngine.mergeAndSave(subgraph);
+        } catch (graphError) {
+            console.warn("Graph build failed (non-fatal)", graphError);
+        }
 
         const savedSummary = {
             id: String(Date.now()),

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Bridge — Smart Recall</title>
+  <meta name="description" content="Ask natural language questions about your stored memories. Instantly retrieves relevant context." />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #080b12;
+      --surface:  #0d1120;
+      --surface2: #121828;
+      --surface3: #161e30;
+      --border:   #1a2235;
+      --border2:  #222d45;
+      --text:     #dde4f5;
+      --muted:    #3d4e70;
+      --muted2:   #5a6d94;
+      --accent:   #6c7fff;
+      --green:    #34d399;
+      --purple:   #a78bfa;
+      --orange:   #fb923c;
+      --red:      #f87171;
+      --gold:     #f5c842;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; }
+    body { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Top bar ─────────────────────────────────────────────── */
+    #topbar {
+      flex: 0 0 auto;
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: #d4ff4e;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 11px; color: #111; flex: 0 0 auto;
+    }
+    .logo-text { font-size: 15px; font-weight: 700; }
+    .logo-sub  { font-size: 10px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; }
+    .divider-v { width: 1px; height: 28px; background: var(--border); flex: 0 0 auto; }
+
+    .tb-stat { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted2); }
+    .tb-stat strong { color: var(--accent); }
+
+    /* ── Main layout ─────────────────────────────────────────── */
+    #body { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; padding: 28px 32px 0; }
+
+    /* ── Search box ──────────────────────────────────────────── */
+    #searchSection { flex: 0 0 auto; margin-bottom: 24px; }
+
+    .search-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted2);
+      font-family: 'JetBrains Mono', monospace; margin-bottom: 10px;
+    }
+
+    .search-row {
+      display: flex; gap: 10px; align-items: center;
+    }
+
+    .search-box-wrap {
+      flex: 1; position: relative;
+    }
+
+    .search-icon {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%); color: var(--muted2);
+      pointer-events: none;
+    }
+
+    #queryInput {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px; font-weight: 500;
+      padding: 14px 16px 14px 42px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    #queryInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,127,255,.12);
+    }
+
+    #queryInput::placeholder { color: var(--muted); }
+
+    .search-btn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 14px 22px; border-radius: 12px;
+      border: none; cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px; font-weight: 600;
+      transition: all .15s; white-space: nowrap;
+    }
+
+    #recallBtn {
+      background: var(--accent); color: #fff;
+    }
+    #recallBtn:hover { background: #5a6eee; transform: translateY(-1px); }
+    #recallBtn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    #aiBtn {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--muted2);
+    }
+    #aiBtn:hover { color: var(--text); border-color: var(--purple); }
+    #aiBtn.active { background: rgba(167,139,250,.15); border-color: var(--purple); color: var(--purple); }
+    #aiBtn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Example queries ─────────────────────────────────────── */
+    .examples {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+    }
+
+    .example-pill {
+      padding: 4px 12px; border-radius: 99px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      font-size: 11px; color: var(--muted2);
+      cursor: pointer; transition: all .12s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .example-pill:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ── Results ─────────────────────────────────────────────── */
+    #results {
+      flex: 1 1 auto; overflow-y: auto;
+      padding-bottom: 24px;
+    }
+
+    #results::-webkit-scrollbar { width: 5px; }
+    #results::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── AI answer box ───────────────────────────────────────── */
+    #aiAnswerBox {
+      display: none;
+      background: linear-gradient(135deg, rgba(108,127,255,.08), rgba(167,139,250,.08));
+      border: 1px solid rgba(108,127,255,.25);
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .ai-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 99px;
+      background: rgba(108,127,255,.15);
+      border: 1px solid rgba(108,127,255,.3);
+      font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 12px;
+    }
+
+    .ai-pulse {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    #aiAnswerText {
+      font-size: 14px; line-height: 1.75; color: #c8d0f0;
+    }
+
+    /* ── Result cards ────────────────────────────────────────── */
+    .results-header {
+      font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted2);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .results-header::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      transition: border-color .15s;
+      cursor: pointer;
+    }
+    .result-card:hover { border-color: var(--border2); }
+
+    .result-top {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+
+    .result-type-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto;
+    }
+
+    .result-type-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted2);
+    }
+
+    .result-score-bar {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .score-track {
+      width: 60px; height: 3px;
+      background: var(--border2); border-radius: 99px; overflow: hidden;
+    }
+
+    .score-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+    }
+
+    .score-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--muted2); min-width: 28px; text-align: right;
+    }
+
+    .result-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: #8a98c0; line-height: 1.7;
+    }
+
+    .result-text mark {
+      background: rgba(108,127,255,.25);
+      color: #b0bcff;
+      border-radius: 3px; padding: 0 2px;
+    }
+
+    .result-session {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* ── Empty / loading ─────────────────────────────────────── */
+    #placeholder {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 60px 0; gap: 16px; color: var(--muted);
+    }
+
+    .ph-title { font-size: 18px; font-weight: 600; }
+    .ph-sub {
+      font-size: 13px; font-family: 'JetBrains Mono', monospace;
+      text-align: center; max-width: 380px; line-height: 1.8; color: var(--muted);
+    }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div id="topbar">
+    <div class="logo">
+      <div class="logo-mark">LB</div>
+      <div>
+        <div class="logo-text">LLM Bridge</div>
+        <div class="logo-sub">smart recall</div>
+      </div>
+    </div>
+    <div class="divider-v"></div>
+    <div class="tb-stat" id="topStat">loading…</div>
+  </div>
+
+  <div id="body">
+
+    <div id="searchSection">
+      <div class="search-label">ask anything about your memories</div>
+      <div class="search-row">
+        <div class="search-box-wrap">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="queryInput" type="text" placeholder="what was my smart pen project?" autocomplete="off" spellcheck="false" />
+        </div>
+        <button class="search-btn" id="recallBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          recall
+        </button>
+        <button class="search-btn" id="aiBtn" title="Use AI to synthesize an answer from matched memories">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M22 2 12 12"/><path d="m22 2-5 5"/><path d="m22 2-5 0"/><path d="m22 2 0 5"/></svg>
+          ask AI
+        </button>
+      </div>
+      <div class="examples" id="examples">
+        <span class="example-pill">what was my smart pen project?</span>
+        <span class="example-pill">vector search decisions</span>
+        <span class="example-pill">open issues with memory</span>
+        <span class="example-pill">goals for LLM bridge</span>
+        <span class="example-pill">tech stack used</span>
+      </div>
+    </div>
+
+    <div id="results">
+      <div id="aiAnswerBox">
+        <div class="ai-badge"><div class="ai-pulse"></div> AI Answer</div>
+        <div id="aiAnswerText"></div>
+      </div>
+      <div id="resultsList"></div>
+      <div id="placeholder">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="color:var(--border2)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <div class="ph-title">Ask anything</div>
+        <div class="ph-sub">Type a natural language question and instantly retrieve relevant memories from all your sessions.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="recall.js"></script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Bridge — Memory Timeline</title>
+  <meta name="description" content="Chronological timeline of all your imported chats and generated memory blocks." />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080b12;
+      --surface:   #0d1120;
+      --surface2:  #121828;
+      --surface3:  #161e30;
+      --border:    #1a2235;
+      --border2:   #202d45;
+      --text:      #dde4f5;
+      --muted:     #3d4e70;
+      --muted2:    #5a6d94;
+      --accent:    #6c7fff;
+      --accent-g:  #34d399;
+      --accent-o:  #fb923c;
+      --accent-r:  #f87171;
+      --accent-p:  #a78bfa;
+      --gold:      #f5c842;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    body { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Top bar ───────────────────────────────────────────── */
+    #topbar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 13px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-right: 4px;
+    }
+
+    .logo-mark {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: #d4ff4e;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 11px; color: #111;
+      flex: 0 0 auto;
+    }
+
+    .logo-text { font-size: 15px; font-weight: 700; color: var(--text); }
+    .logo-sub  { font-size: 10px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; }
+
+    .divider-v { width: 1px; height: 28px; background: var(--border); flex: 0 0 auto; }
+
+    .tb-stat {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted2);
+    }
+
+    .tb-stat strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .tb-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+    .tb-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted2);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px; font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .tb-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ── Layout ────────────────────────────────────────────── */
+    #layout {
+      flex: 1 1 auto;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Left sidebar ──────────────────────────────────────── */
+    #sidebar {
+      width: 240px;
+      flex: 0 0 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+
+    #sidebar::-webkit-scrollbar { width: 4px; }
+    #sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .sidebar-section { margin-bottom: 4px; }
+
+    .date-group-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      padding: 10px 16px 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-group-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 9px 16px;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: all .12s;
+      position: relative;
+    }
+
+    .session-item:hover { background: var(--surface2); }
+
+    .session-item.active {
+      background: var(--surface2);
+      border-left-color: var(--accent);
+    }
+
+    .session-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--border2);
+      flex: 0 0 auto;
+      margin-right: 10px;
+      transition: background .12s;
+    }
+
+    .session-item.active .session-dot,
+    .session-item:hover .session-dot { background: var(--accent); }
+
+    .session-meta { flex: 1; min-width: 0; }
+
+    .session-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .session-pills {
+      display: flex;
+      gap: 4px;
+      margin-top: 3px;
+      flex-wrap: wrap;
+    }
+
+    .spill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .spill-msg { background: rgba(108,127,255,.12); color: #7b8fff; }
+    .spill-mem { background: rgba(52,211,153,.12); color: #34d399; }
+    .spill-mod { background: rgba(167,139,250,.12); color: #a78bfa; }
+
+    /* ── Main panel ────────────────────────────────────────── */
+    #main {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 28px 32px;
+    }
+
+    #main::-webkit-scrollbar { width: 5px; }
+    #main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── Empty / loading ───────────────────────────────────── */
+    #emptyState {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 18px;
+      color: var(--muted);
+    }
+
+    .empty-title { font-size: 20px; font-weight: 600; }
+    .empty-sub {
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.8;
+      max-width: 380px;
+    }
+
+    /* ── Session detail ────────────────────────────────────── */
+    #sessionDetail { display: none; }
+
+    .detail-header {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-date {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted2);
+      margin-bottom: 6px;
+    }
+
+    .detail-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .detail-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+      border: 1px solid;
+    }
+
+    .chip-blue  { background: rgba(108,127,255,.1); color: #7b8fff; border-color: rgba(108,127,255,.25); }
+    .chip-green { background: rgba(52,211,153,.1);  color: #34d399; border-color: rgba(52,211,153,.25); }
+    .chip-purple{ background: rgba(167,139,250,.1); color: #a78bfa; border-color: rgba(167,139,250,.25); }
+    .chip-orange{ background: rgba(251,146,60,.1);  color: #fb923c; border-color: rgba(251,146,60,.25); }
+
+    /* ── Memory blocks grid ───────────────────────────────── */
+    .blocks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+
+    .memory-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      transition: border-color .15s;
+    }
+
+    .memory-block:hover { border-color: var(--border2); }
+
+    .block-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .block-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      flex: 0 0 auto;
+    }
+
+    .block-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .block-count {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted2);
+      background: var(--surface3);
+      padding: 1px 7px;
+      border-radius: 4px;
+    }
+
+    .block-items { list-style: none; }
+
+    .block-item {
+      font-size: 12px;
+      color: #8a98c0;
+      line-height: 1.65;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .block-item:last-child { border-bottom: none; }
+
+    .item-bullet {
+      color: var(--muted);
+      flex: 0 0 auto;
+      margin-top: 1px;
+      font-size: 10px;
+    }
+
+    /* ── Copy raw button ───────────────────────────────────── */
+    .copy-raw-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      padding: 8px 16px;
+      border-radius: 9px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted2);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px; font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .copy-raw-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ── Timeline connector in sidebar ────────────────────── */
+    .timeline-line {
+      position: absolute;
+      left: 22px;
+      top: 100%;
+      width: 2px;
+      height: 0;
+      background: var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div id="topbar">
+    <div class="logo">
+      <div class="logo-mark">LB</div>
+      <div>
+        <div class="logo-text">LLM Bridge</div>
+        <div class="logo-sub">memory timeline</div>
+      </div>
+    </div>
+    <div class="divider-v"></div>
+    <div class="tb-stat" id="totalStat">loading…</div>
+    <div class="tb-right">
+      <button class="tb-btn" id="exportAllBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        export all
+      </button>
+    </div>
+  </div>
+
+  <!-- Layout -->
+  <div id="layout">
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div id="sidebarContent"></div>
+    </div>
+
+    <!-- Main -->
+    <div id="main">
+      <div id="emptyState">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="color:#1a2235"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div class="empty-title">No sessions yet</div>
+        <div class="empty-sub">Import a chat and run <strong>Summarize</strong> to create your first memory session.</div>
+      </div>
+      <div id="sessionDetail"></div>
+    </div>
+
+  </div>
+
+  <script src="timeline.js"></script>
+</body>
+</html>
