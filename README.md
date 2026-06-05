@@ -94,6 +94,28 @@ macOS or Linux:
 OLLAMA_ORIGINS=chrome-extension://* ollama serve
 ```
 
+#### Configuring Ollama Environment Variables on Windows
+
+To configure Ollama permanently on Windows (e.g., to store models on another drive and allow Chrome extension access):
+
+- **`OLLAMA_MODELS`**: Set to `D:\OllamaModels` (or your preferred path) to change the model storage directory.
+- **`OLLAMA_ORIGINS`**: Set to `chrome-extension://*` (or `*`) to authorize browser extensions.
+
+**How to set them permanently:**
+1. Open the Start Menu, search for **"Environment Variables"**, and select **Edit the system environment variables**.
+2. Click the **Environment Variables...** button.
+3. In the **User variables** section, click **New...** to add each variable:
+   - **Variable name:** `OLLAMA_MODELS` | **Variable value:** `D:\OllamaModels`
+   - **Variable name:** `OLLAMA_ORIGINS` | **Variable value:** `chrome-extension://*`
+4. Click **OK** on all dialogs to save.
+5. **Important:** Fully quit Ollama (from the Windows system tray) and restart it for the environment variables to take effect.
+
+Alternatively, set them via PowerShell (User level):
+```powershell
+[System.Environment]::SetEnvironmentVariable("OLLAMA_MODELS", "D:\OllamaModels", "User")
+[System.Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS", "chrome-extension://*", "User")
+```
+
 4. Open LLM Bridge **Settings**.
 5. Set **Provider** to **"Ollama (local)"**.
 6. Confirm your Ollama URL and model name.
@@ -217,6 +239,13 @@ Restart Ollama with:
 ```powershell
 $env:OLLAMA_ORIGINS="chrome-extension://*"; ollama serve
 ```
+
+Alternatively, configure the environment variables permanently on Windows:
+
+- **`OLLAMA_ORIGINS`**: Set to `chrome-extension://*` (or `*` to allow all origins).
+- **`OLLAMA_MODELS`**: Set to `D:\OllamaModels` (or your preferred path) if you want to store your models on a different drive.
+
+To set these permanently, refer to the [Configuring Ollama Environment Variables on Windows](#configuring-ollama-environment-variables-on-windows) section above.
 
 ### Receiving end does not exist
 
@@ -347,6 +376,28 @@ macOS or Linux:
 OLLAMA_ORIGINS=chrome-extension://* ollama serve
 ```
 
+#### Configuring Ollama Environment Variables on Windows
+
+To configure Ollama permanently on Windows (e.g., to store models on another drive and allow Chrome extension access):
+
+- **`OLLAMA_MODELS`**: Set to `D:\OllamaModels` (or your preferred path) to change the model storage directory.
+- **`OLLAMA_ORIGINS`**: Set to `chrome-extension://*` (or `*`) to authorize browser extensions.
+
+**How to set them permanently:**
+1. Open the Start Menu, search for **"Environment Variables"**, and select **Edit the system environment variables**.
+2. Click the **Environment Variables...** button.
+3. In the **User variables** section, click **New...** to add each variable:
+   - **Variable name:** `OLLAMA_MODELS` | **Variable value:** `D:\OllamaModels`
+   - **Variable name:** `OLLAMA_ORIGINS` | **Variable value:** `chrome-extension://*`
+4. Click **OK** on all dialogs to save.
+5. **Important:** Fully quit Ollama (from the Windows system tray) and restart it for the environment variables to take effect.
+
+Alternatively, set them via PowerShell (User level):
+```powershell
+[System.Environment]::SetEnvironmentVariable("OLLAMA_MODELS", "D:\OllamaModels", "User")
+[System.Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS", "chrome-extension://*", "User")
+```
+
 5. Open `chrome://extensions/`.
 6. Enable Developer Mode.
 7. Click Load unpacked.
@@ -427,6 +478,13 @@ Restart Ollama with:
 ```powershell
 $env:OLLAMA_ORIGINS="chrome-extension://*"; ollama serve
 ```
+
+Alternatively, configure the environment variables permanently on Windows:
+
+- **`OLLAMA_ORIGINS`**: Set to `chrome-extension://*` (or `*` to allow all origins).
+- **`OLLAMA_MODELS`**: Set to `D:\OllamaModels` (or your preferred path) if you want to store your models on a different drive.
+
+To set these permanently, refer to the [Configuring Ollama Environment Variables on Windows](#configuring-ollama-environment-variables-on-windows) section above.
 
 ### Receiving end does not exist
 
