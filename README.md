@@ -13,6 +13,7 @@ LLM Bridge is a Chrome Manifest V3 extension that extracts supported AI chat pag
 - Smart paragraph and sentence-aware chunking
 - Persistent extracted chats, summaries, memory, settings, and progress
 - Popup state restore after refresh or close
+- Keyboard shortcut (**Alt+D**) to quickly open the LLM Bridge popup
 - Copy, TXT export, and Markdown export
 - Send summary directly to ChatGPT, Claude, or Grok
 - Options page for provider, API key, model, chunk size, temperature, and system prompt
@@ -318,6 +319,7 @@ Processing is local. The popup is only the control surface; extraction, chunking
 - Smart paragraph and sentence-aware chunking
 - Persistent extracted chats, summaries, memory, settings, and progress
 - Popup state restore after refresh or close
+- Keyboard shortcut (**Alt+D**) to quickly open the LLM Bridge popup
 - Copy, TXT export, and Markdown export
 - Options page for Ollama URL, model, chunk size, temperature, and system prompt
 

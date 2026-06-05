@@ -38,6 +38,15 @@
     "128": "icons/icon128.png"
   },
   "options_page": "options.html",
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+D",
+        "mac": "Alt+D"
+      },
+      "description": "Open LLM Bridge popup"
+    }
+  },
   "content_scripts": [
     {
       "matches": [
